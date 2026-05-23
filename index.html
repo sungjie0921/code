@@ -80,7 +80,28 @@ body { font-family: 'Segoe UI', 'Microsoft JhengHei', sans-serif; background: va
 /* ── Grid ── */
 .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
-@media(max-width:700px){ .grid-2,.grid-3{ grid-template-columns:1fr; } #main{ margin-left:0; } #sidebar{ transform:translateX(-100%); } }
+
+/* ── Hamburger ── */
+#menu-btn {
+  display: none; position: fixed; top: 12px; left: 12px; z-index: 300;
+  background: #1a365d; color: white; border: none; border-radius: 8px;
+  width: 42px; height: 42px; font-size: 1.3rem; cursor: pointer;
+  align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,.3);
+}
+#overlay {
+  display: none; position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 90;
+}
+#overlay.show { display: block; }
+
+@media(max-width:700px){
+  .grid-2,.grid-3{ grid-template-columns:1fr; }
+  #main{ margin-left:0; }
+  #sidebar{ transform:translateX(-100%); }
+  #sidebar.open { transform:translateX(0); }
+  #menu-btn { display:flex; }
+  .section { padding: 16px; padding-top: 60px; }
+  #topbar { padding: 14px 16px 14px 64px; }
+}
 
 /* ── Info boxes ── */
 .info-box { border-radius: 8px; padding: 14px 16px; margin: 12px 0; font-size: .9rem; line-height: 1.6; }
@@ -200,6 +221,10 @@ tr:hover td { background: #edf2f7; }
 </style>
 </head>
 <body>
+
+<!-- Hamburger -->
+<button id="menu-btn" onclick="toggleSidebar()">☰</button>
+<div id="overlay" onclick="toggleSidebar()"></div>
 
 <!-- Sidebar -->
 <div id="sidebar">
@@ -969,9 +994,17 @@ function showSection(n) {
   visited.add(n);
   updateProgress();
   window.scrollTo(0,0);
+  closeSidebar();
+  // 確保測驗已渲染（防止 DOMContentLoaded 時有問題）
+  renderQuiz(n);
+  // 初始化圖表
   if (n===2) initDescChart();
   if (n===3) { initNormalChart(); initZChart(); }
   if (n===7) { initAnovaChart(); renderProgress(); }
+  // MathJax 重新排版該章節
+  if (typeof MathJax !== 'undefined' && MathJax.typesetPromise) {
+    MathJax.typesetPromise([document.getElementById('sec-'+n)]).catch(function(){});
+  }
 }
 
 function nextSection() {
@@ -982,6 +1015,15 @@ function updateProgress() {
   const pct = Math.round((visited.size / totalSections)*100);
   document.getElementById('overall-progress').style.width = pct+'%';
   document.getElementById('progress-text').textContent = `進度：${visited.size} / ${totalSections} 章`;
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('overlay').classList.toggle('show');
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('overlay').classList.remove('show');
 }
 
 // ── Quiz data ──
@@ -1023,57 +1065,80 @@ const quizzes = {
 // ── Render quizzes ──
 let quizState = {};
 function renderQuiz(secIdx) {
-  const container = document.getElementById('quiz-'+secIdx);
-  if (!container || container.innerHTML.trim()) return;
-  const qs = quizzes[secIdx];
+  const i = parseInt(secIdx, 10);
+  const container = document.getElementById('quiz-'+i);
+  if (!container) return;
+  // 已有內容就跳過（避免重複渲染）
+  if (container.innerHTML.trim()) return;
+  const qs = quizzes[i];
   if (!qs) return;
-  quizState[secIdx] = { idx:0, score:0 };
-  renderQuestion(secIdx);
+  if (!quizState[i]) quizState[i] = { idx:0, score:0 };
+  renderQuestion(i);
 }
-function renderQuestion(secIdx) {
-  const state = quizState[secIdx];
-  const qs = quizzes[secIdx];
-  const container = document.getElementById('quiz-'+secIdx);
+function initAllQuizStates() {
+  Object.keys(quizzes).forEach(function(k) {
+    const i = parseInt(k, 10);
+    quizState[i] = { idx:0, score:0 };
+  });
+}
+function renderQuestion(n) {
+  const state = quizState[n];
+  const qs = quizzes[n];
+  const container = document.getElementById('quiz-'+n);
+  if (!state || !qs || !container) return;
   if (state.idx >= qs.length) {
-    container.innerHTML = `<div class="info-box green"><strong>✅ 測驗完成！得分：${state.score}/${qs.length}</strong><br>${state.score===qs.length?'全對！太棒了！':'繼續努力，多複習錯誤的題目喔！'}</div><button onclick="resetQuiz(${secIdx})" style="margin-top:10px;padding:8px 18px;background:var(--primary);color:white;border:none;border-radius:8px;cursor:pointer">重新作答</button>`;
+    container.innerHTML = '<div class="info-box green"><strong>✅ 測驗完成！得分：'+state.score+'/'+qs.length+'</strong><br>'+(state.score===qs.length?'全對！太棒了！':'繼續努力，多複習錯誤的題目喔！')+'</div><button onclick="resetQuiz('+n+')" style="margin-top:10px;padding:8px 18px;background:var(--primary);color:white;border:none;border-radius:8px;cursor:pointer">重新作答</button>';
     return;
   }
   const q = qs[state.idx];
   const letters = ['A','B','C','D'];
-  container.innerHTML = `
-    <div style="font-size:.78rem;color:var(--text-light);margin-bottom:8px">題目 ${state.idx+1} / ${qs.length}</div>
-    <div class="quiz-q">${q.q}</div>
-    <div class="quiz-options">
-      ${q.opts.map((o,i)=>`<div class="quiz-opt" id="opt-${secIdx}-${i}" onclick="selectOpt(${secIdx},${i},${q.ans})"><div class="opt-icon">${letters[i]}</div>${o}</div>`).join('')}
-    </div>
-    <div class="quiz-feedback" id="qfb-${secIdx}"></div>
-    <button class="quiz-next" id="qnext-${secIdx}" onclick="nextQuestion(${secIdx})">下一題 →</button>
-  `;
+  const opts = q.opts.map(function(o,i){
+    return '<div class="quiz-opt" id="opt-'+n+'-'+i+'" onclick="selectOpt('+n+','+i+','+q.ans+')"><div class="opt-icon">'+letters[i]+'</div>'+o+'</div>';
+  }).join('');
+  container.innerHTML =
+    '<div style="font-size:.78rem;color:var(--text-light);margin-bottom:8px">題目 '+(state.idx+1)+' / '+qs.length+'</div>'+
+    '<div class="quiz-q">'+q.q+'</div>'+
+    '<div class="quiz-options">'+opts+'</div>'+
+    '<div class="quiz-feedback" id="qfb-'+n+'"></div>'+
+    '<button class="quiz-next" id="qnext-'+n+'" onclick="nextQuestion('+n+')">下一題 →</button>';
 }
 function selectOpt(secIdx, chosen, ans) {
-  const opts = document.querySelectorAll(`[id^="opt-${secIdx}-"]`);
-  opts.forEach(o => o.onclick = null);
+  // 防止重複點擊
+  const container = document.getElementById('quiz-'+secIdx);
+  if (container && container.dataset.answered) return;
+  if (container) container.dataset.answered = '1';
+
   const fb = document.getElementById('qfb-'+secIdx);
   const nxt = document.getElementById('qnext-'+secIdx);
+  if (!fb || !nxt) return;
   const q = quizzes[secIdx][quizState[secIdx].idx];
+  // 讓所有選項變暗，不可再點
+  document.querySelectorAll(`[id^="opt-${secIdx}-"]`).forEach(o => {
+    o.style.pointerEvents = 'none';
+    o.style.opacity = '0.85';
+  });
   if (chosen === ans) {
-    document.getElementById(`opt-${secIdx}-${chosen}`).classList.add('correct');
+    document.getElementById('opt-'+secIdx+'-'+chosen).classList.add('correct');
     fb.className = 'quiz-feedback show ok';
     fb.innerHTML = '✅ 正確！'+q.exp;
     quizState[secIdx].score++;
   } else {
-    document.getElementById(`opt-${secIdx}-${chosen}`).classList.add('wrong');
-    document.getElementById(`opt-${secIdx}-${ans}`).classList.add('correct');
+    document.getElementById('opt-'+secIdx+'-'+chosen).classList.add('wrong');
+    document.getElementById('opt-'+secIdx+'-'+ans).classList.add('correct');
     fb.className = 'quiz-feedback show bad';
     fb.innerHTML = '❌ 錯誤。'+q.exp;
   }
   nxt.className = 'quiz-next show';
 }
 function nextQuestion(secIdx) {
+  const container = document.getElementById('quiz-'+secIdx);
+  if (container) delete container.dataset.answered;
   quizState[secIdx].idx++;
   renderQuestion(secIdx);
 }
 function resetQuiz(secIdx) {
+  const container = document.getElementById('quiz-'+secIdx);
+  if (container) { delete container.dataset.answered; container.innerHTML = ''; }
   quizState[secIdx] = { idx:0, score:0 };
   renderQuestion(secIdx);
 }
@@ -1317,9 +1382,16 @@ function renderProgress() {
 }
 
 // ── Init ──
-document.addEventListener('DOMContentLoaded', () => {
-  Object.keys(quizzes).forEach(renderQuiz);
-  setTimeout(()=>{if(typeof MathJax!=='undefined')MathJax.typesetPromise&&MathJax.typesetPromise()},1000);
+document.addEventListener('DOMContentLoaded', function() {
+  // 先初始化所有 quizState，再渲染各章節測驗
+  initAllQuizStates();
+  for (var i = 0; i < totalSections; i++) { renderQuiz(i); }
+  // 初始 MathJax
+  setTimeout(function(){
+    if (typeof MathJax !== 'undefined' && MathJax.typesetPromise) {
+      MathJax.typesetPromise().catch(function(){});
+    }
+  }, 800);
 });
 </script>
 </body>
