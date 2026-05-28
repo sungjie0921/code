@@ -4,6 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>護理系生物統計 — 自動化即時回饋系統</title>
+<!-- PWA -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1e3a5f">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="護理統計">
+<link rel="apple-touch-icon" href="icon.svg">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
@@ -213,17 +221,68 @@ tr:hover td{background:#e0f2fe}
 .bell-wrap{display:flex;justify-content:center;margin:16px 0}
 .bell-svg{width:100%;max-width:480px;height:120px}
 
+/* Bottom Nav (mobile) */
+#bottom-nav{
+  display:none;position:fixed;bottom:0;left:0;right:0;z-index:250;
+  background:#fff;border-top:1px solid var(--border);
+  grid-template-columns:repeat(4,1fr);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  box-shadow:0 -2px 10px rgba(0,0,0,.08)
+}
+.bn-item{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:3px;cursor:pointer;padding:8px 4px;transition:background .15s
+}
+.bn-item:active{background:#f1f5f9}
+.bn-icon{font-size:1.15rem;line-height:1}
+.bn-label{font-size:.58rem;color:var(--gray);font-weight:500}
+.bn-item.active .bn-label{color:var(--blue);font-weight:700}
+.bn-item.active .bn-icon{filter:drop-shadow(0 0 3px rgba(37,99,235,.5))}
+
+/* Install banner */
+#install-banner{
+  display:none;position:fixed;bottom:68px;left:12px;right:12px;z-index:300;
+  background:#fff;border-radius:14px;padding:14px 16px;
+  box-shadow:0 6px 28px rgba(0,0,0,.18);align-items:center;gap:12px
+}
+#install-banner.show{display:flex}
+.ib-icon{font-size:2rem;flex-shrink:0}
+.ib-text{flex:1}
+.ib-title{font-weight:700;font-size:.88rem;margin-bottom:2px}
+.ib-sub{font-size:.75rem;color:var(--gray)}
+.ib-btn{padding:8px 14px;background:var(--blue);color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:.8rem;font-weight:600;flex-shrink:0}
+.ib-close{background:none;border:none;font-size:1rem;cursor:pointer;color:var(--gray);padding:4px;flex-shrink:0}
+
+/* Offline badge */
+#offline-badge{
+  display:none;position:fixed;top:12px;left:50%;transform:translateX(-50%);
+  background:#ef4444;color:#fff;font-size:.75rem;padding:5px 14px;
+  border-radius:20px;z-index:400;font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,.2)
+}
+#offline-badge.show{display:block}
+
+/* Install button in topbar */
+#btn-install{
+  display:none;padding:6px 12px;background:var(--green);color:#fff;border:none;
+  border-radius:8px;cursor:pointer;font-size:.76rem;font-weight:600
+}
+#btn-install:hover{background:#15803d}
+
+/* Safe area for sidebar and main */
+#sidebar{padding-bottom:env(safe-area-inset-bottom,0px)}
+
 /* Responsive */
 @media(max-width:680px){
   #ham{display:flex}
   #sidebar{transform:translateX(-100%)}
   #sidebar.open{transform:translateX(0)}
   #overlay.show{display:block}
-  #main{margin-left:0}
+  #main{margin-left:0;padding-bottom:calc(60px + env(safe-area-inset-bottom,0px))}
   .section{padding:16px;padding-top:56px}
   #topbar{padding:12px 16px 12px 58px}
   .g2,.g3,.g4,.dash-ch-grid,.dash-hero-stats{grid-template-columns:1fr}
   .zcalc-inputs{flex-direction:column}
+  #bottom-nav{display:grid}
 }
 </style>
 </head>
@@ -232,6 +291,34 @@ tr:hover td{background:#e0f2fe}
 <button id="ham" onclick="openSidebar()">&#9776;</button>
 <div id="overlay" onclick="closeSidebar()"></div>
 <div id="toast"></div>
+<div id="offline-badge">📵 離線模式</div>
+
+<!-- Install banner (mobile) -->
+<div id="install-banner">
+  <div class="ib-icon">🏥</div>
+  <div class="ib-text">
+    <div class="ib-title">安裝護理統計 APP</div>
+    <div class="ib-sub">加入主畫面，隨時離線學習</div>
+  </div>
+  <button class="ib-btn" id="ib-install">安裝</button>
+  <button class="ib-close" id="ib-close">✕</button>
+</div>
+
+<!-- Bottom navigation (mobile) -->
+<div id="bottom-nav">
+  <div class="bn-item active" id="bn-0" onclick="goSection(0)">
+    <div class="bn-icon">🏠</div><div class="bn-label">首頁</div>
+  </div>
+  <div class="bn-item" id="bn-prev" onclick="goPrev()">
+    <div class="bn-icon">←</div><div class="bn-label">上一章</div>
+  </div>
+  <div class="bn-item" id="bn-next-m" onclick="goNext()">
+    <div class="bn-icon">→</div><div class="bn-label">下一章</div>
+  </div>
+  <div class="bn-item" id="bn-menu" onclick="openSidebar()">
+    <div class="bn-icon">☰</div><div class="bn-label">章節</div>
+  </div>
+</div>
 
 <div id="app">
 
@@ -281,6 +368,7 @@ tr:hover td{background:#e0f2fe}
     <div id="topbar-title">學習進度總覽</div>
     <div style="display:flex;gap:8px;align-items:center">
       <span class="tb-badge" id="tb-badge">總覽</span>
+      <button id="btn-install" onclick="triggerInstall()">⬇ 安裝APP</button>
       <button id="btn-next" onclick="goNext()">開始學習 →</button>
     </div>
   </div>
@@ -1162,6 +1250,105 @@ function renderQ(ch) {
 }
 
 // ──────────────────────────────────────────────
+// Bottom nav sync
+// ──────────────────────────────────────────────
+function syncBottomNav(n) {
+  for (var i = 0; i <= 6; i++) {
+    var el = document.getElementById('bn-' + i);
+    if (el) el.classList.toggle('active', i === n);
+  }
+  var home = document.getElementById('bn-0');
+  if (home) home.classList.toggle('active', n === 0);
+  var prevBtn = document.getElementById('bn-prev');
+  if (prevBtn) prevBtn.style.opacity = n <= 1 ? '0.35' : '1';
+  var nextBtn = document.getElementById('bn-next-m');
+  if (nextBtn) nextBtn.style.opacity = n >= 6 ? '0.35' : '1';
+}
+
+function goPrev() {
+  if (currentCh > 0) goSection(currentCh - 1);
+}
+
+// Patch goSection to sync bottom nav
+var _goSection = goSection;
+goSection = function(n) {
+  _goSection(n);
+  syncBottomNav(n);
+};
+
+// ──────────────────────────────────────────────
+// PWA: Service Worker
+// ──────────────────────────────────────────────
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('./sw.js').then(function(reg) {
+      reg.addEventListener('updatefound', function() {
+        var newWorker = reg.installing;
+        newWorker.addEventListener('statechange', function() {
+          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+            showToast('🔄 內容已更新，重新整理以套用最新版本');
+          }
+        });
+      });
+    }).catch(function(err) {
+      console.warn('SW registration failed:', err);
+    });
+  });
+}
+
+// ──────────────────────────────────────────────
+// PWA: Install prompt
+// ──────────────────────────────────────────────
+var deferredInstallPrompt = null;
+
+window.addEventListener('beforeinstallprompt', function(e) {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  document.getElementById('btn-install').style.display = 'inline-block';
+  // Show banner after 2s delay on mobile
+  setTimeout(function() {
+    if (window.innerWidth <= 680) {
+      document.getElementById('install-banner').classList.add('show');
+    }
+  }, 2000);
+});
+
+window.addEventListener('appinstalled', function() {
+  deferredInstallPrompt = null;
+  document.getElementById('btn-install').style.display = 'none';
+  document.getElementById('install-banner').classList.remove('show');
+  showToast('🎉 APP 已成功安裝到主畫面！');
+});
+
+function triggerInstall() {
+  if (!deferredInstallPrompt) {
+    showToast('請在瀏覽器選單中選擇「加入主畫面」');
+    return;
+  }
+  deferredInstallPrompt.prompt();
+  deferredInstallPrompt.userChoice.then(function(result) {
+    if (result.outcome === 'accepted') showToast('🎉 正在安裝 APP...');
+    deferredInstallPrompt = null;
+  });
+}
+
+document.getElementById('ib-install').addEventListener('click', triggerInstall);
+document.getElementById('ib-close').addEventListener('click', function() {
+  document.getElementById('install-banner').classList.remove('show');
+});
+
+// ──────────────────────────────────────────────
+// PWA: Offline indicator
+// ──────────────────────────────────────────────
+function updateOnlineStatus() {
+  var badge = document.getElementById('offline-badge');
+  if (badge) badge.classList.toggle('show', !navigator.onLine);
+  if (!navigator.onLine) showToast('📵 目前為離線模式，可繼續使用已快取的內容');
+}
+window.addEventListener('online', updateOnlineStatus);
+window.addEventListener('offline', updateOnlineStatus);
+
+// ──────────────────────────────────────────────
 // Boot
 // ──────────────────────────────────────────────
 (function boot() {
@@ -1169,6 +1356,8 @@ function renderQ(ch) {
   renderDashboard();
   initQuiz(1);
   initQuiz(2);
+  syncBottomNav(0);
+  updateOnlineStatus();
 })();
 </script>
 </body>

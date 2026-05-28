@@ -1,0 +1,41 @@
+{
+  "name": "護理系生物統計學",
+  "short_name": "護理統計",
+  "description": "護理系生物統計自動化即時回饋系統——含6章節互動學習、即時測驗回饋與進度追蹤",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#1e3a5f",
+  "theme_color": "#1e3a5f",
+  "orientation": "any",
+  "lang": "zh-TW",
+  "dir": "ltr",
+  "categories": ["education", "medical"],
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "學習進度總覽",
+      "short_name": "進度",
+      "description": "查看各章節學習進度與測驗成績",
+      "url": "./"
+    },
+    {
+      "name": "第一章：生物統計概論",
+      "short_name": "Ch1",
+      "url": "./#ch1"
+    },
+    {
+      "name": "即時測驗",
+      "short_name": "測驗",
+      "description": "進行章節即時測驗",
+      "url": "./#quiz"
+    }
+  ]
+}

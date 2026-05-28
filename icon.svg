@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1e3a5f"/>
+      <stop offset="100%" stop-color="#2563eb"/>
+    </linearGradient>
+    <clipPath id="rounded">
+      <rect width="512" height="512" rx="96"/>
+    </clipPath>
+  </defs>
+  <rect width="512" height="512" rx="96" fill="url(#g)"/>
+  <!-- Baseline -->
+  <rect x="80" y="408" width="360" height="12" rx="6" fill="rgba(255,255,255,0.5)"/>
+  <!-- Bar 1 -->
+  <rect x="105" y="310" width="76" height="98" rx="10" fill="rgba(255,255,255,0.75)"/>
+  <!-- Bar 2 -->
+  <rect x="215" y="230" width="76" height="178" rx="10" fill="rgba(255,255,255,0.9)"/>
+  <!-- Bar 3 -->
+  <rect x="325" y="155" width="76" height="253" rx="10" fill="white"/>
+  <!-- Trend line -->
+  <polyline points="143,310 253,230 363,155"
+    stroke="#fbbf24" stroke-width="12" fill="none"
+    stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Trend dots -->
+  <circle cx="143" cy="310" r="10" fill="#fbbf24"/>
+  <circle cx="253" cy="230" r="10" fill="#fbbf24"/>
+  <circle cx="363" cy="155" r="10" fill="#fbbf24"/>
+  <!-- Healthcare cross (top-left) -->
+  <rect x="64"  y="68"  width="22" height="72" rx="6" fill="#ef4444"/>
+  <rect x="42"  y="90"  width="66" height="22" rx="6" fill="#ef4444"/>
+</svg>
