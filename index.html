@@ -3,9 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>護理系生物統計學</title>
+<title>護理系生物統計 — 自動化即時回饋系統</title>
+<!-- PWA -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1e3a5f">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="護理統計">
+<link rel="apple-touch-icon" href="icon.svg">
 <style>
-/* ─── Reset & Variables ─── */
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
   --blue:#2563eb;--blue-dark:#1e40af;--blue-light:#eff6ff;--blue-mid:#bfdbfe;
@@ -13,99 +20,74 @@
   --orange:#ea580c;--orange-light:#fff7ed;--orange-mid:#fed7aa;
   --purple:#7c3aed;--purple-light:#faf5ff;--purple-mid:#ddd6fe;
   --red:#dc2626;--red-light:#fef2f2;--red-mid:#fecaca;
+  --yellow:#d97706;--yellow-light:#fffbeb;--yellow-mid:#fde68a;
   --gray:#64748b;--gray-light:#f8fafc;--border:#e2e8f0;
   --text:#1e293b;--shadow:0 2px 12px rgba(0,0,0,.08);--radius:12px
 }
 body{font-family:'Segoe UI','Microsoft JhengHei',sans-serif;background:#f1f5f9;color:var(--text);line-height:1.6}
-
-/* ─── Layout ─── */
 #app{display:flex;min-height:100vh}
 
-/* ─── Sidebar ─── */
-#sidebar{
-  width:240px;flex-shrink:0;background:linear-gradient(180deg,#1e3a5f,#2563eb);
-  color:#fff;position:fixed;top:0;left:0;bottom:0;overflow-y:auto;
-  z-index:200;transition:transform .28s ease
-}
-#sidebar-head{padding:22px 18px 16px;border-bottom:1px solid rgba(255,255,255,.15)}
-#sidebar-head h1{font-size:.95rem;font-weight:700;line-height:1.5}
-#sidebar-head p{font-size:.72rem;opacity:.65;margin-top:3px}
-.nav-link{
-  display:flex;align-items:center;gap:10px;padding:12px 18px;
-  cursor:pointer;font-size:.84rem;border-left:3px solid transparent;
-  transition:background .18s
-}
+/* Sidebar */
+#sidebar{width:240px;flex-shrink:0;background:linear-gradient(180deg,#1e3a5f,#2563eb);color:#fff;position:fixed;top:0;left:0;bottom:0;overflow-y:auto;z-index:200;transition:transform .28s ease}
+#sidebar-head{padding:18px 16px 14px;border-bottom:1px solid rgba(255,255,255,.15)}
+#sidebar-head h1{font-size:.9rem;font-weight:700;line-height:1.5}
+#sidebar-head p{font-size:.7rem;opacity:.65;margin-top:2px}
+.nav-section{padding:8px 0 4px;font-size:.68rem;text-transform:uppercase;letter-spacing:.8px;opacity:.5;padding-left:18px}
+.nav-link{display:flex;align-items:center;gap:9px;padding:10px 16px;cursor:pointer;font-size:.82rem;border-left:3px solid transparent;transition:background .18s}
 .nav-link:hover{background:rgba(255,255,255,.12)}
 .nav-link.active{background:rgba(255,255,255,.18);border-left-color:#93c5fd}
-.nav-num{
-  width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,.2);
-  display:flex;align-items:center;justify-content:center;
-  font-size:.68rem;font-weight:700;flex-shrink:0
-}
+.nav-num{width:20px;height:20px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:700;flex-shrink:0}
+.nav-star{font-size:.7rem;margin-left:auto;opacity:.8}
 
-/* ─── Hamburger ─── */
-#ham{
-  display:none;position:fixed;top:10px;left:10px;z-index:300;
-  background:#1e3a5f;color:#fff;border:none;border-radius:8px;
-  width:40px;height:40px;font-size:1.2rem;cursor:pointer;
-  align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.3)
-}
-#overlay{
-  display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:150
-}
+/* Hamburger */
+#ham{display:none;position:fixed;top:10px;left:10px;z-index:300;background:#1e3a5f;color:#fff;border:none;border-radius:8px;width:40px;height:40px;font-size:1.2rem;cursor:pointer;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+#overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:150}
 
-/* ─── Main ─── */
+/* Main */
 #main{margin-left:240px;flex:1;display:flex;flex-direction:column}
-#topbar{
-  position:sticky;top:0;z-index:100;background:#fff;
-  border-bottom:1px solid var(--border);padding:14px 28px;
-  display:flex;align-items:center;justify-content:space-between;
-  box-shadow:0 1px 6px rgba(0,0,0,.06)
-}
+#topbar{position:sticky;top:0;z-index:100;background:#fff;border-bottom:1px solid var(--border);padding:14px 28px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 1px 6px rgba(0,0,0,.06)}
 #topbar-title{font-size:1rem;font-weight:700;color:var(--text)}
 .tb-badge{background:var(--blue);color:#fff;font-size:.7rem;padding:3px 10px;border-radius:20px}
-#btn-next{
-  padding:7px 16px;background:var(--blue);color:#fff;border:none;
-  border-radius:8px;cursor:pointer;font-size:.82rem;font-weight:600
-}
+#btn-next{padding:7px 16px;background:var(--blue);color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:.82rem;font-weight:600}
 #btn-next:hover{background:var(--blue-dark)}
 
-/* ─── Sections ─── */
-.section{display:none;padding:28px;max-width:900px}
+/* Sections */
+.section{display:none;padding:28px;max-width:920px}
 .section.show{display:block}
 
-/* ─── Hero ─── */
-.hero{
-  border-radius:var(--radius);padding:28px;margin-bottom:24px;color:#fff
-}
-.hero h2{font-size:1.45rem;margin-bottom:6px}
-.hero p{font-size:.88rem;opacity:.88}
+/* Hero */
+.hero{border-radius:var(--radius);padding:28px;margin-bottom:24px;color:#fff}
+.hero h2{font-size:1.4rem;margin-bottom:6px}
+.hero p{font-size:.87rem;opacity:.88}
 .hero-1{background:linear-gradient(135deg,#2563eb,#1e40af)}
 .hero-2{background:linear-gradient(135deg,#16a34a,#166534)}
+.hero-3{background:linear-gradient(135deg,#7c3aed,#5b21b6)}
+.hero-4{background:linear-gradient(135deg,#0891b2,#0e7490)}
+.hero-5{background:linear-gradient(135deg,#dc2626,#991b1b)}
+.hero-6{background:linear-gradient(135deg,#d97706,#92400e)}
+.hero-dash{background:linear-gradient(135deg,#1e3a5f,#2563eb)}
 
-/* ─── Card ─── */
+/* Card */
 .card{background:#fff;border-radius:var(--radius);padding:22px;margin-bottom:18px;box-shadow:var(--shadow)}
-.card-title{
-  font-size:.98rem;font-weight:700;color:var(--blue-dark);
-  display:flex;align-items:center;gap:8px;margin-bottom:14px
-}
+.card-title{font-size:.97rem;font-weight:700;color:var(--blue-dark);display:flex;align-items:center;gap:8px;margin-bottom:14px}
 .card-title::before{content:'';display:inline-block;width:4px;height:17px;background:var(--blue);border-radius:2px;flex-shrink:0}
 
-/* ─── Info boxes ─── */
-.box{border-radius:8px;padding:12px 15px;margin:10px 0;font-size:.87rem}
+/* Info boxes */
+.box{border-radius:8px;padding:12px 15px;margin:10px 0;font-size:.86rem}
 .box b{display:block;margin-bottom:3px}
 .box-blue{background:var(--blue-light);border-left:4px solid var(--blue)}
 .box-green{background:var(--green-light);border-left:4px solid var(--green)}
 .box-orange{background:var(--orange-light);border-left:4px solid var(--orange)}
 .box-purple{background:var(--purple-light);border-left:4px solid var(--purple)}
 .box-red{background:var(--red-light);border-left:4px solid var(--red)}
+.box-yellow{background:var(--yellow-light);border-left:4px solid var(--yellow)}
 
-/* ─── Grid ─── */
+/* Grid */
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
 .g4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
 
-/* ─── Table ─── */
+/* Table */
 .tbl-wrap{overflow-x:auto;margin:12px 0}
 table{width:100%;border-collapse:collapse;font-size:.84rem}
 th{background:var(--blue);color:#fff;padding:9px 12px;text-align:left}
@@ -113,109 +95,194 @@ td{padding:8px 12px;border-bottom:1px solid var(--border)}
 tr:nth-child(even) td{background:var(--gray-light)}
 tr:hover td{background:#e0f2fe}
 
-/* ─── Tag chips ─── */
-.chip{display:inline-block;padding:3px 10px;border-radius:20px;font-size:.75rem;font-weight:600;margin:2px}
+/* Chips */
+.chip{display:inline-block;padding:3px 10px;border-radius:20px;font-size:.74rem;font-weight:600;margin:2px}
 .chip-blue{background:var(--blue-mid);color:var(--blue-dark)}
 .chip-orange{background:var(--orange-mid);color:#7c2d12}
 .chip-green{background:var(--green-mid);color:#14532d}
 .chip-purple{background:var(--purple-mid);color:#4c1d95}
+.chip-red{background:var(--red-mid);color:#7f1d1d}
+.chip-yellow{background:var(--yellow-mid);color:#78350f}
 
-/* ─── Formula ─── */
-.formula{
-  background:#1e293b;color:#e2e8f0;border-radius:10px;
-  padding:18px 22px;margin:14px 0;text-align:center;font-size:1rem
-}
-.formula-label{font-size:.7rem;text-transform:uppercase;letter-spacing:1px;color:#94a3b8;margin-bottom:8px}
+/* Formula */
+.formula{background:#1e293b;color:#e2e8f0;border-radius:10px;padding:16px 22px;margin:14px 0;text-align:center}
+.formula-label{font-size:.68rem;text-transform:uppercase;letter-spacing:1px;color:#94a3b8;margin-bottom:8px}
 .formula-math{font-size:1.1rem;font-style:italic;letter-spacing:.5px}
 
-/* ─── Scale Picker ─── */
+/* Scale Picker */
 .scale-grid{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0}
-.scale-btn{
-  padding:9px 16px;border:2px solid var(--border);border-radius:8px;
-  background:#fff;cursor:pointer;font-size:.84rem;transition:all .18s
-}
+.scale-btn{padding:9px 16px;border:2px solid var(--border);border-radius:8px;background:#fff;cursor:pointer;font-size:.84rem;transition:all .18s}
 .scale-btn:hover{border-color:var(--blue);color:var(--blue)}
 .scale-btn.picked{background:var(--blue);color:#fff;border-color:var(--blue)}
-#scale-answer{
-  display:none;border-radius:10px;padding:14px 16px;
-  margin-top:12px;font-size:.87rem;border:1px solid var(--border)
-}
+#scale-answer{display:none;border-radius:10px;padding:14px 16px;margin-top:12px;font-size:.87rem;border:1px solid var(--border)}
 
-/* ─── Stat Method Grid ─── */
-.scale-card{
-  border:2px solid var(--border);border-radius:10px;padding:14px;
-  text-align:center;transition:border-color .18s
-}
-.scale-card:hover{border-color:var(--blue)}
-.scale-icon{font-size:1.6rem;margin-bottom:6px}
-.scale-name{font-weight:700;font-size:.88rem;margin-bottom:4px}
-.scale-tag{display:inline-block;padding:2px 8px;border-radius:12px;font-size:.72rem}
-
-/* ─── Comparison cards ─── */
+/* Compare cards */
 .compare-card{border-radius:10px;padding:16px;border:2px solid}
 .compare-card ul{padding-left:16px;font-size:.84rem;line-height:2}
 
-/* ─── Quiz ─── */
-.quiz-wrap{}
-.quiz-progress{font-size:.75rem;color:var(--gray);margin-bottom:10px}
-.quiz-q{font-weight:700;font-size:.93rem;margin-bottom:14px;line-height:1.55}
-.quiz-opts{display:flex;flex-direction:column;gap:8px}
-.opt-btn{
-  display:flex;align-items:center;gap:10px;padding:11px 14px;
-  border:2px solid var(--border);border-radius:8px;background:#fff;
-  cursor:pointer;font-size:.86rem;text-align:left;transition:border-color .15s;
-  width:100%
-}
-.opt-btn:hover:not([disabled]){border-color:var(--blue)}
-.opt-btn[disabled]{cursor:default}
-.opt-letter{
-  width:26px;height:26px;border-radius:50%;background:var(--gray-light);
-  display:flex;align-items:center;justify-content:center;
-  font-size:.72rem;font-weight:700;flex-shrink:0
-}
-.opt-btn.correct{background:var(--green-light);border-color:var(--green)}
-.opt-btn.correct .opt-letter{background:var(--green);color:#fff}
-.opt-btn.wrong{background:var(--red-light);border-color:var(--red)}
-.opt-btn.wrong .opt-letter{background:var(--red);color:#fff}
-.quiz-fb{
-  display:none;border-radius:8px;padding:11px 14px;
-  font-size:.85rem;margin-top:12px;border:1px solid
-}
-.quiz-fb.show{display:block}
-.quiz-fb.ok{background:var(--green-light);border-color:var(--green-mid);color:#14532d}
-.quiz-fb.bad{background:var(--red-light);border-color:var(--red-mid);color:#7f1d1d}
-.btn-next-q{
-  display:none;margin-top:12px;padding:9px 20px;background:var(--blue);
-  color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:.84rem;font-weight:600
-}
-.btn-next-q.show{display:inline-block}
-.btn-next-q:hover{background:var(--blue-dark)}
-.quiz-done{text-align:center;padding:20px}
-.quiz-score{font-size:2rem;font-weight:700;color:var(--blue)}
-.btn-retry{
-  margin-top:14px;padding:9px 22px;background:var(--blue);
-  color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:.84rem;font-weight:600
-}
-.btn-retry:hover{background:var(--blue-dark)}
-
-/* ─── Nursing Memo ─── */
-.memo-item{
-  display:flex;align-items:center;gap:12px;
-  padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:#fff
-}
+/* Memo items */
+.memo-item{display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:#fff}
 .memo-icon{font-size:1.4rem;flex-shrink:0}
 .memo-name{font-weight:700;font-size:.88rem}
 
-/* ─── Responsive ─── */
+/* Scale method cards */
+.scale-card{border:2px solid var(--border);border-radius:10px;padding:14px;text-align:center;transition:border-color .18s}
+.scale-card:hover{border-color:var(--blue)}
+.scale-icon{font-size:1.5rem;margin-bottom:6px}
+.scale-name{font-weight:700;font-size:.86rem;margin-bottom:4px}
+
+/* Dashboard */
+.dash-hero-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
+.dash-stat{background:#fff;border-radius:var(--radius);padding:18px;box-shadow:var(--shadow);text-align:center}
+.dash-stat-num{font-size:2rem;font-weight:700;color:var(--blue)}
+.dash-stat-label{font-size:.78rem;color:var(--gray);margin-top:4px}
+.dash-ch-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.dash-ch-card{background:#fff;border-radius:var(--radius);padding:18px;box-shadow:var(--shadow);border-top:4px solid var(--border);cursor:pointer;transition:transform .15s,box-shadow .15s}
+.dash-ch-card:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.12)}
+.dash-ch-card.done{border-top-color:var(--green)}
+.dash-ch-card.partial{border-top-color:var(--orange)}
+.dash-ch-card.unvisited{border-top-color:#cbd5e1;opacity:.75}
+.dash-ch-num{font-size:.72rem;color:var(--gray);text-transform:uppercase;letter-spacing:.5px}
+.dash-ch-title{font-size:.9rem;font-weight:700;margin:4px 0 8px}
+.dash-stars{color:#f59e0b;font-size:.9rem;letter-spacing:2px}
+.dash-ch-score{font-size:.8rem;color:var(--gray)}
+.progress-bar-wrap{background:#e2e8f0;border-radius:20px;height:8px;overflow:hidden;margin:8px 0}
+.progress-bar-fill{height:100%;border-radius:20px;transition:width .8s ease}
+.fill-blue{background:linear-gradient(90deg,var(--blue),#60a5fa)}
+.fill-green{background:linear-gradient(90deg,var(--green),#4ade80)}
+.fill-orange{background:linear-gradient(90deg,var(--orange),#fb923c)}
+
+/* Calculator */
+.calc-textarea{width:100%;padding:10px 12px;border:2px solid var(--border);border-radius:8px;font-size:.9rem;resize:vertical;min-height:56px;font-family:inherit}
+.calc-textarea:focus{outline:none;border-color:var(--blue)}
+.btn-calc{padding:9px 22px;background:var(--blue);color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:.86rem;font-weight:600;margin-top:10px}
+.btn-calc:hover{background:var(--blue-dark)}
+.calc-result{background:var(--gray-light);border:1px solid var(--border);border-radius:10px;padding:16px;margin-top:14px;display:none}
+.calc-stat-row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);font-size:.86rem}
+.calc-stat-row:last-child{border-bottom:none;padding-top:8px;font-weight:700}
+.calc-stat-lbl{color:var(--gray)}
+.calc-stat-val{font-weight:700;color:var(--blue-dark)}
+.zcalc-inputs{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin:12px 0}
+.zcalc-field{display:flex;flex-direction:column;gap:4px}
+.zcalc-field label{font-size:.78rem;color:var(--gray)}
+.zcalc-field input{width:110px;padding:8px 10px;border:2px solid var(--border);border-radius:8px;font-size:.9rem}
+.zcalc-field input:focus{outline:none;border-color:var(--blue)}
+
+/* Decision tree */
+.dtree{border:2px solid var(--border);border-radius:10px;padding:16px;font-size:.86rem}
+.dtree-q{font-weight:700;margin-bottom:10px;color:var(--blue-dark)}
+.dtree-opts{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px}
+.dtree-btn{padding:7px 14px;border:2px solid var(--border);border-radius:8px;background:#fff;cursor:pointer;font-size:.84rem;transition:all .15s}
+.dtree-btn:hover{border-color:var(--blue);color:var(--blue)}
+.dtree-btn.selected{background:var(--blue);color:#fff;border-color:var(--blue)}
+.dtree-result{background:var(--green-light);border:2px solid var(--green);border-radius:10px;padding:14px;margin-top:10px;display:none}
+.dtree-result-name{font-size:1.05rem;font-weight:700;color:var(--green);margin-bottom:6px}
+.dtree-reset{margin-top:10px;padding:6px 14px;background:#fff;border:2px solid var(--border);border-radius:8px;cursor:pointer;font-size:.82rem}
+.dtree-reset:hover{border-color:var(--blue)}
+
+/* Quiz */
+.quiz-progress{font-size:.75rem;color:var(--gray);margin-bottom:10px;display:flex;align-items:center;gap:10px}
+.quiz-prog-bar{flex:1;background:#e2e8f0;border-radius:20px;height:6px;overflow:hidden}
+.quiz-prog-fill{height:100%;background:var(--blue);border-radius:20px;transition:width .3s}
+.quiz-q{font-weight:700;font-size:.93rem;margin-bottom:14px;line-height:1.6}
+.quiz-opts{display:flex;flex-direction:column;gap:8px}
+.opt-btn{display:flex;align-items:center;gap:10px;padding:11px 14px;border:2px solid var(--border);border-radius:8px;background:#fff;cursor:pointer;font-size:.86rem;text-align:left;transition:all .15s;width:100%}
+.opt-btn:hover:not([disabled]){border-color:var(--blue);background:var(--blue-light)}
+.opt-btn[disabled]{cursor:default}
+.opt-letter{width:26px;height:26px;border-radius:50%;background:var(--gray-light);display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;flex-shrink:0;transition:all .2s}
+@keyframes pop-correct{0%{transform:scale(1)}50%{transform:scale(1.04)}100%{transform:scale(1)}}
+@keyframes pop-wrong{0%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}100%{transform:translateX(0)}}
+.opt-btn.correct{background:var(--green-light);border-color:var(--green);animation:pop-correct .35s ease}
+.opt-btn.correct .opt-letter{background:var(--green);color:#fff}
+.opt-btn.wrong{background:var(--red-light);border-color:var(--red);animation:pop-wrong .35s ease}
+.opt-btn.wrong .opt-letter{background:var(--red);color:#fff}
+.quiz-fb{display:none;border-radius:8px;padding:12px 14px;font-size:.85rem;margin-top:12px;border:1px solid;line-height:1.6}
+.quiz-fb.show{display:block}
+.quiz-fb.ok{background:var(--green-light);border-color:var(--green-mid);color:#14532d}
+.quiz-fb.bad{background:var(--red-light);border-color:var(--red-mid);color:#7f1d1d}
+.btn-next-q{display:none;margin-top:12px;padding:9px 20px;background:var(--blue);color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:.84rem;font-weight:600}
+.btn-next-q.show{display:inline-block}
+.btn-next-q:hover{background:var(--blue-dark)}
+.quiz-done{text-align:center;padding:24px 16px}
+.quiz-score-big{font-size:3rem;font-weight:700;color:var(--blue);line-height:1}
+.quiz-score-label{font-size:.88rem;color:var(--gray);margin:6px 0 16px}
+.quiz-stars{font-size:1.6rem;margin:8px 0}
+.quiz-msg{font-size:.9rem;color:var(--text);margin-bottom:16px}
+.quiz-suggestions{text-align:left;background:var(--blue-light);border-radius:10px;padding:14px 16px;margin:12px 0;font-size:.85rem}
+.quiz-suggestions b{display:block;margin-bottom:6px;color:var(--blue-dark)}
+.btn-retry{padding:9px 22px;background:var(--blue);color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:.84rem;font-weight:600}
+.btn-retry:hover{background:var(--blue-dark)}
+
+/* Toast */
+#toast{position:fixed;bottom:24px;right:24px;background:#1e293b;color:#fff;padding:12px 20px;border-radius:10px;font-size:.85rem;z-index:9999;opacity:0;transition:opacity .35s;pointer-events:none;max-width:280px;box-shadow:0 4px 16px rgba(0,0,0,.25)}
+#toast.show{opacity:1}
+
+/* Normal curve */
+.bell-wrap{display:flex;justify-content:center;margin:16px 0}
+.bell-svg{width:100%;max-width:480px;height:120px}
+
+/* Bottom Nav (mobile) */
+#bottom-nav{
+  display:none;position:fixed;bottom:0;left:0;right:0;z-index:250;
+  background:#fff;border-top:1px solid var(--border);
+  grid-template-columns:repeat(4,1fr);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  box-shadow:0 -2px 10px rgba(0,0,0,.08)
+}
+.bn-item{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:3px;cursor:pointer;padding:8px 4px;transition:background .15s
+}
+.bn-item:active{background:#f1f5f9}
+.bn-icon{font-size:1.15rem;line-height:1}
+.bn-label{font-size:.58rem;color:var(--gray);font-weight:500}
+.bn-item.active .bn-label{color:var(--blue);font-weight:700}
+.bn-item.active .bn-icon{filter:drop-shadow(0 0 3px rgba(37,99,235,.5))}
+
+/* Install banner */
+#install-banner{
+  display:none;position:fixed;bottom:68px;left:12px;right:12px;z-index:300;
+  background:#fff;border-radius:14px;padding:14px 16px;
+  box-shadow:0 6px 28px rgba(0,0,0,.18);align-items:center;gap:12px
+}
+#install-banner.show{display:flex}
+.ib-icon{font-size:2rem;flex-shrink:0}
+.ib-text{flex:1}
+.ib-title{font-weight:700;font-size:.88rem;margin-bottom:2px}
+.ib-sub{font-size:.75rem;color:var(--gray)}
+.ib-btn{padding:8px 14px;background:var(--blue);color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:.8rem;font-weight:600;flex-shrink:0}
+.ib-close{background:none;border:none;font-size:1rem;cursor:pointer;color:var(--gray);padding:4px;flex-shrink:0}
+
+/* Offline badge */
+#offline-badge{
+  display:none;position:fixed;top:12px;left:50%;transform:translateX(-50%);
+  background:#ef4444;color:#fff;font-size:.75rem;padding:5px 14px;
+  border-radius:20px;z-index:400;font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,.2)
+}
+#offline-badge.show{display:block}
+
+/* Install button in topbar */
+#btn-install{
+  display:none;padding:6px 12px;background:var(--green);color:#fff;border:none;
+  border-radius:8px;cursor:pointer;font-size:.76rem;font-weight:600
+}
+#btn-install:hover{background:#15803d}
+
+/* Safe area for sidebar and main */
+#sidebar{padding-bottom:env(safe-area-inset-bottom,0px)}
+
+/* Responsive */
 @media(max-width:680px){
   #ham{display:flex}
   #sidebar{transform:translateX(-100%)}
   #sidebar.open{transform:translateX(0)}
   #overlay.show{display:block}
-  #main{margin-left:0}
+  #main{margin-left:0;padding-bottom:calc(60px + env(safe-area-inset-bottom,0px))}
   .section{padding:16px;padding-top:56px}
   #topbar{padding:12px 16px 12px 58px}
-  .g2,.g3,.g4{grid-template-columns:1fr}
+  .g2,.g3,.g4,.dash-ch-grid,.dash-hero-stats{grid-template-columns:1fr}
+  .zcalc-inputs{flex-direction:column}
+  #bottom-nav{display:grid}
 }
 </style>
 </head>
@@ -223,6 +290,35 @@ tr:hover td{background:#e0f2fe}
 
 <button id="ham" onclick="openSidebar()">&#9776;</button>
 <div id="overlay" onclick="closeSidebar()"></div>
+<div id="toast"></div>
+<div id="offline-badge">📵 離線模式</div>
+
+<!-- Install banner (mobile) -->
+<div id="install-banner">
+  <div class="ib-icon">🏥</div>
+  <div class="ib-text">
+    <div class="ib-title">安裝護理統計 APP</div>
+    <div class="ib-sub">加入主畫面，隨時離線學習</div>
+  </div>
+  <button class="ib-btn" id="ib-install">安裝</button>
+  <button class="ib-close" id="ib-close">✕</button>
+</div>
+
+<!-- Bottom navigation (mobile) -->
+<div id="bottom-nav">
+  <div class="bn-item active" id="bn-0" onclick="goSection(0)">
+    <div class="bn-icon">🏠</div><div class="bn-label">首頁</div>
+  </div>
+  <div class="bn-item" id="bn-prev" onclick="goPrev()">
+    <div class="bn-icon">←</div><div class="bn-label">上一章</div>
+  </div>
+  <div class="bn-item" id="bn-next-m" onclick="goNext()">
+    <div class="bn-icon">→</div><div class="bn-label">下一章</div>
+  </div>
+  <div class="bn-item" id="bn-menu" onclick="openSidebar()">
+    <div class="bn-icon">☰</div><div class="bn-label">章節</div>
+  </div>
+</div>
 
 <div id="app">
 
@@ -230,39 +326,84 @@ tr:hover td{background:#e0f2fe}
 <nav id="sidebar">
   <div id="sidebar-head">
     <h1>🏥 護理系生物統計學</h1>
-    <p>互動學習平台</p>
+    <p>自動化即時回饋系統</p>
   </div>
-  <div style="padding:10px 0">
+  <div style="padding:8px 0">
+    <div class="nav-section">主選單</div>
     <div class="nav-link active" id="nav-0" onclick="goSection(0)">
-      <div class="nav-num">1</div>生物統計概論
+      <div class="nav-num">🏠</div>學習進度總覽
     </div>
+    <div class="nav-section">章節</div>
     <div class="nav-link" id="nav-1" onclick="goSection(1)">
-      <div class="nav-num">2</div>資料種類與測量尺度
+      <div class="nav-num">1</div>生物統計概論<span class="nav-star" id="nstar-1"></span>
     </div>
+    <div class="nav-link" id="nav-2" onclick="goSection(2)">
+      <div class="nav-num">2</div>資料與測量尺度<span class="nav-star" id="nstar-2"></span>
+    </div>
+    <div class="nav-link" id="nav-3" onclick="goSection(3)">
+      <div class="nav-num">3</div>描述統計<span class="nav-star" id="nstar-3"></span>
+    </div>
+    <div class="nav-link" id="nav-4" onclick="goSection(4)">
+      <div class="nav-num">4</div>機率與常態分佈<span class="nav-star" id="nstar-4"></span>
+    </div>
+    <div class="nav-link" id="nav-5" onclick="goSection(5)">
+      <div class="nav-num">5</div>假設檢定<span class="nav-star" id="nstar-5"></span>
+    </div>
+    <div class="nav-link" id="nav-6" onclick="goSection(6)">
+      <div class="nav-num">6</div>常用統計方法<span class="nav-star" id="nstar-6"></span>
+    </div>
+  </div>
+  <div style="padding:12px 16px;border-top:1px solid rgba(255,255,255,.12);margin-top:8px">
+    <div style="font-size:.72rem;opacity:.55;margin-bottom:6px">整體完成度</div>
+    <div style="background:rgba(255,255,255,.2);border-radius:20px;height:6px;overflow:hidden">
+      <div id="sidebar-progress" style="height:100%;background:#93c5fd;border-radius:20px;transition:width .6s;width:0%"></div>
+    </div>
+    <div id="sidebar-progress-text" style="font-size:.7rem;opacity:.65;margin-top:4px">0 / 6 章節完成</div>
   </div>
 </nav>
 
 <!-- ═══ Main ═══ -->
 <div id="main">
-
-  <!-- Topbar -->
   <div id="topbar">
-    <div id="topbar-title">第一章：生物統計概論</div>
+    <div id="topbar-title">學習進度總覽</div>
     <div style="display:flex;gap:8px;align-items:center">
-      <span class="tb-badge" id="tb-badge">Ch 1 / 2</span>
-      <button id="btn-next" onclick="goNext()">下一章 →</button>
+      <span class="tb-badge" id="tb-badge">總覽</span>
+      <button id="btn-install" onclick="triggerInstall()">⬇ 安裝APP</button>
+      <button id="btn-next" onclick="goNext()">開始學習 →</button>
     </div>
   </div>
 
-  <!-- ════════════ CHAPTER 1 ════════════ -->
+  <!-- ═══ SECTION 0: Dashboard ═══ -->
   <div class="section show" id="sec-0">
+    <div class="hero hero-dash">
+      <h2>📊 護理系生物統計學習系統</h2>
+      <p>自動化即時回饋平台｜完成每章測驗，系統將依您的表現提供個人化建議。</p>
+    </div>
 
+    <div class="dash-hero-stats" id="dash-stats">
+      <div class="dash-stat"><div class="dash-stat-num" id="ds-visited">0</div><div class="dash-stat-label">已學習章節</div></div>
+      <div class="dash-stat"><div class="dash-stat-num" id="ds-quizzes">0</div><div class="dash-stat-label">已完成測驗</div></div>
+      <div class="dash-stat"><div class="dash-stat-num" id="ds-avg">—</div><div class="dash-stat-label">平均答題率</div></div>
+      <div class="dash-stat"><div class="dash-stat-num" id="ds-stars">0</div><div class="dash-stat-label">獲得星星數</div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">章節學習進度</div>
+      <div class="dash-ch-grid" id="dash-ch-grid"></div>
+    </div>
+
+    <div class="card" id="dash-rec-card">
+      <div class="card-title">🎯 個人化學習建議</div>
+      <div id="dash-rec"></div>
+    </div>
+  </div>
+
+  <!-- ═══ SECTION 1: Ch1 ═══ -->
+  <div class="section" id="sec-1">
     <div class="hero hero-1">
       <h2>📊 第一章：生物統計概論</h2>
       <p>認識生物統計在護理研究中的角色，掌握母體、樣本、參數與統計量的核心概念。</p>
     </div>
-
-    <!-- 為什麼需要統計 -->
     <div class="card">
       <div class="card-title">為什麼護理研究需要統計？</div>
       <div class="g2">
@@ -272,484 +413,750 @@ tr:hover td{background:#e0f2fe}
         <div class="box box-purple"><b>⚖️ 臨床決策支持</b>利用統計資料協助制定個別化、有根據的照護計畫。</div>
       </div>
     </div>
-
-    <!-- 核心概念對照 -->
     <div class="card">
       <div class="card-title">核心概念：母體 vs 樣本</div>
       <div class="tbl-wrap">
         <table>
-          <thead>
-            <tr><th>概念</th><th>定義</th><th>護理例子</th><th>常用符號</th></tr>
-          </thead>
+          <thead><tr><th>概念</th><th>定義</th><th>護理例子</th><th>符號</th></tr></thead>
           <tbody>
-            <tr>
-              <td><strong>母體 Population</strong></td>
-              <td>研究所關注的所有個體</td>
-              <td>全台灣所有糖尿病患者</td>
-              <td><em>N</em></td>
-            </tr>
-            <tr>
-              <td><strong>樣本 Sample</strong></td>
-              <td>從母體中抽取的部分個體</td>
-              <td>某醫院 200 位糖尿病患者</td>
-              <td><em>n</em></td>
-            </tr>
-            <tr>
-              <td><strong>參數 Parameter</strong></td>
-              <td>描述母體的數值（通常未知）</td>
-              <td>全台灣糖尿病患者的平均血糖</td>
-              <td>μ、σ</td>
-            </tr>
-            <tr>
-              <td><strong>統計量 Statistic</strong></td>
-              <td>描述樣本的數值（可由資料計算）</td>
-              <td>200 位患者的平均血糖值</td>
-              <td>x̄、s</td>
-            </tr>
+            <tr><td><strong>母體 Population</strong></td><td>研究所關注的所有個體</td><td>全台灣所有糖尿病患者</td><td><em>N</em></td></tr>
+            <tr><td><strong>樣本 Sample</strong></td><td>從母體中抽取的部分個體</td><td>某醫院 200 位糖尿病患者</td><td><em>n</em></td></tr>
+            <tr><td><strong>參數 Parameter</strong></td><td>描述母體的數值（通常未知）</td><td>全台灣糖尿病患者的平均血糖</td><td>μ、σ</td></tr>
+            <tr><td><strong>統計量 Statistic</strong></td><td>描述樣本的數值（可由資料計算）</td><td>200 位患者的平均血糖值</td><td>x̄、s</td></tr>
           </tbody>
         </table>
       </div>
-      <div class="box box-blue">
-        <b>💡 關鍵記憶法</b>
-        母體用「<strong>希臘字母</strong>」（μ、σ、π）；樣本用「<strong>英文字母</strong>」（x̄、s、p̂）
-      </div>
+      <div class="box box-blue"><b>💡 記憶法</b>母體用「希臘字母」（μ、σ）；樣本用「英文字母」（x̄、s）</div>
     </div>
-
-    <!-- 兩大分支 -->
     <div class="card">
       <div class="card-title">統計的兩大分支</div>
       <div class="g2">
         <div class="compare-card" style="border-color:var(--blue)">
-          <div style="font-weight:700;color:var(--blue);font-size:.95rem;margin-bottom:10px">📋 描述統計 Descriptive</div>
-          <ul>
-            <li>整理、摘要、呈現資料</li>
-            <li>平均值、標準差</li>
-            <li>長條圖、直方圖</li>
-            <li>不做推論，只描述現有資料</li>
-          </ul>
+          <div style="font-weight:700;color:var(--blue);font-size:.93rem;margin-bottom:10px">📋 描述統計 Descriptive</div>
+          <ul><li>整理、摘要、呈現資料</li><li>平均值、標準差</li><li>長條圖、直方圖</li><li>不做推論，只描述現有資料</li></ul>
           <div style="margin-top:10px"><span class="chip chip-blue">第三章主題</span></div>
         </div>
         <div class="compare-card" style="border-color:var(--green)">
-          <div style="font-weight:700;color:var(--green);font-size:.95rem;margin-bottom:10px">🔮 推論統計 Inferential</div>
-          <ul>
-            <li>用樣本推估母體</li>
-            <li>假設檢定（t、F、χ²）</li>
-            <li>信賴區間</li>
-            <li>需考慮抽樣誤差</li>
-          </ul>
-          <div style="margin-top:10px"><span class="chip chip-green">第六～八章主題</span></div>
+          <div style="font-weight:700;color:var(--green);font-size:.93rem;margin-bottom:10px">🔮 推論統計 Inferential</div>
+          <ul><li>用樣本推估母體</li><li>假設檢定（t、F、χ²）</li><li>信賴區間</li><li>需考慮抽樣誤差</li></ul>
+          <div style="margin-top:10px"><span class="chip chip-green">第五～六章主題</span></div>
         </div>
       </div>
     </div>
-
-    <!-- 研究流程 -->
-    <div class="card">
-      <div class="card-title">護理研究中的統計角色</div>
-      <div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;margin-bottom:16px">
-        <div style="background:var(--blue);color:#fff;padding:8px 14px;border-radius:6px;font-size:.82rem;font-weight:600">提出研究問題</div>
-        <div style="color:var(--gray);font-size:1.2rem;font-weight:700">→</div>
-        <div style="background:#7c3aed;color:#fff;padding:8px 14px;border-radius:6px;font-size:.82rem;font-weight:600">設計研究方案</div>
-        <div style="color:var(--gray);font-size:1.2rem;font-weight:700">→</div>
-        <div style="background:var(--orange);color:#fff;padding:8px 14px;border-radius:6px;font-size:.82rem;font-weight:600">收集資料</div>
-        <div style="color:var(--gray);font-size:1.2rem;font-weight:700">→</div>
-        <div style="background:var(--green);color:#fff;padding:8px 14px;border-radius:6px;font-size:.82rem;font-weight:600">統計分析</div>
-        <div style="color:var(--gray);font-size:1.2rem;font-weight:700">→</div>
-        <div style="background:#0891b2;color:#fff;padding:8px 14px;border-radius:6px;font-size:.82rem;font-weight:600">解讀結論</div>
-      </div>
-      <div class="box box-orange">
-        <b>🏥 護理實例</b>
-        研究問題：「新的疼痛管理措施是否比傳統方法更有效？」→ 收集疼痛評分資料 → 用 t 檢定比較兩組平均 → 若 p &lt; 0.05 則結論：新措施顯著有效。
-      </div>
-    </div>
-
-    <!-- Quiz -->
     <div class="card">
       <div class="card-title">🧪 即時測驗：第一章</div>
-      <div id="quiz-0"></div>
+      <div id="quiz-1"></div>
     </div>
+  </div>
 
-  </div><!-- end sec-0 -->
-
-
-  <!-- ════════════ CHAPTER 2 ════════════ -->
-  <div class="section" id="sec-1">
-
+  <!-- ═══ SECTION 2: Ch2 ═══ -->
+  <div class="section" id="sec-2">
     <div class="hero hero-2">
       <h2>📁 第二章：資料種類與測量尺度</h2>
       <p>辨識資料型態是選擇正確統計方法的第一步。四種測量尺度決定了可以使用哪些統計方法。</p>
     </div>
-
-    <!-- 資料型態 -->
     <div class="card">
       <div class="card-title">兩大資料型態</div>
       <div class="g2">
         <div style="border:2px solid var(--orange);border-radius:10px;padding:16px">
-          <div style="font-weight:700;color:var(--orange);margin-bottom:10px;font-size:.95rem">類別資料 Categorical</div>
-          <div class="box box-orange" style="margin:0 0 8px">
-            <b>名目資料 Nominal</b>
-            無順序，只有分類<br>例：血型、性別、種族
-          </div>
-          <div class="box box-orange" style="margin:0">
-            <b>次序資料 Ordinal</b>
-            有順序，但間距不等<br>例：疼痛等級、教育程度
-          </div>
+          <div style="font-weight:700;color:var(--orange);margin-bottom:10px;font-size:.93rem">類別資料 Categorical</div>
+          <div class="box box-orange" style="margin:0 0 8px"><b>名目資料 Nominal</b>無順序，只有分類<br>例：血型、性別、種族</div>
+          <div class="box box-orange" style="margin:0"><b>次序資料 Ordinal</b>有順序，但間距不等<br>例：疼痛等級、教育程度</div>
         </div>
         <div style="border:2px solid var(--blue);border-radius:10px;padding:16px">
-          <div style="font-weight:700;color:var(--blue);margin-bottom:10px;font-size:.95rem">連續資料 Continuous</div>
-          <div class="box box-blue" style="margin:0 0 8px">
-            <b>區間資料 Interval</b>
-            等距，但無真正零點<br>例：攝氏體溫、IQ 分數
-          </div>
-          <div class="box box-blue" style="margin:0">
-            <b>比例資料 Ratio</b>
-            等距，且有真正零點<br>例：體重、身高、血壓
-          </div>
+          <div style="font-weight:700;color:var(--blue);margin-bottom:10px;font-size:.93rem">連續資料 Continuous</div>
+          <div class="box box-blue" style="margin:0 0 8px"><b>區間資料 Interval</b>等距，但無真正零點<br>例：攝氏體溫、IQ 分數</div>
+          <div class="box box-blue" style="margin:0"><b>比例資料 Ratio</b>等距，且有真正零點<br>例：體重、身高、血壓</div>
         </div>
       </div>
     </div>
-
-    <!-- 四種尺度詳細說明 -->
     <div class="card">
       <div class="card-title">四種測量尺度詳細比較</div>
       <div class="tbl-wrap">
         <table>
-          <thead>
-            <tr><th>尺度</th><th>有分類</th><th>有順序</th><th>等距</th><th>真零點</th><th>適用統計</th></tr>
-          </thead>
+          <thead><tr><th>尺度</th><th>有分類</th><th>有順序</th><th>等距</th><th>真零點</th><th>適用統計</th></tr></thead>
           <tbody>
-            <tr>
-              <td><span class="chip chip-orange">名目 Nominal</span></td>
-              <td style="color:var(--green);font-weight:700">✓</td>
-              <td style="color:var(--red);font-weight:700">✗</td>
-              <td style="color:var(--red);font-weight:700">✗</td>
-              <td style="color:var(--red);font-weight:700">✗</td>
-              <td>次數、百分比、卡方檢定</td>
-            </tr>
-            <tr>
-              <td><span class="chip chip-orange">次序 Ordinal</span></td>
-              <td style="color:var(--green);font-weight:700">✓</td>
-              <td style="color:var(--green);font-weight:700">✓</td>
-              <td style="color:var(--red);font-weight:700">✗</td>
-              <td style="color:var(--red);font-weight:700">✗</td>
-              <td>中位數、Spearman 相關</td>
-            </tr>
-            <tr>
-              <td><span class="chip chip-blue">區間 Interval</span></td>
-              <td style="color:var(--green);font-weight:700">✓</td>
-              <td style="color:var(--green);font-weight:700">✓</td>
-              <td style="color:var(--green);font-weight:700">✓</td>
-              <td style="color:var(--red);font-weight:700">✗</td>
-              <td>平均數、t 檢定、ANOVA</td>
-            </tr>
-            <tr>
-              <td><span class="chip chip-blue">比例 Ratio</span></td>
-              <td style="color:var(--green);font-weight:700">✓</td>
-              <td style="color:var(--green);font-weight:700">✓</td>
-              <td style="color:var(--green);font-weight:700">✓</td>
-              <td style="color:var(--green);font-weight:700">✓</td>
-              <td>幾何平均、所有統計方法</td>
-            </tr>
+            <tr><td><span class="chip chip-orange">名目 Nominal</span></td><td style="color:var(--green);font-weight:700">✓</td><td style="color:var(--red);font-weight:700">✗</td><td style="color:var(--red);font-weight:700">✗</td><td style="color:var(--red);font-weight:700">✗</td><td>次數、百分比、卡方檢定</td></tr>
+            <tr><td><span class="chip chip-orange">次序 Ordinal</span></td><td style="color:var(--green);font-weight:700">✓</td><td style="color:var(--green);font-weight:700">✓</td><td style="color:var(--red);font-weight:700">✗</td><td style="color:var(--red);font-weight:700">✗</td><td>中位數、Spearman 相關</td></tr>
+            <tr><td><span class="chip chip-blue">區間 Interval</span></td><td style="color:var(--green);font-weight:700">✓</td><td style="color:var(--green);font-weight:700">✓</td><td style="color:var(--green);font-weight:700">✓</td><td style="color:var(--red);font-weight:700">✗</td><td>平均數、t 檢定、ANOVA</td></tr>
+            <tr><td><span class="chip chip-blue">比例 Ratio</span></td><td style="color:var(--green);font-weight:700">✓</td><td style="color:var(--green);font-weight:700">✓</td><td style="color:var(--green);font-weight:700">✓</td><td style="color:var(--green);font-weight:700">✓</td><td>幾何平均、所有統計方法</td></tr>
           </tbody>
         </table>
       </div>
-      <div class="box box-purple">
-        <b>💡 記憶原則</b>
-        測量尺度層級越高（名目 → 次序 → 區間 → 比例），可使用的統計方法越多、分析越精細。
-      </div>
+      <div class="box box-purple"><b>💡 記憶原則</b>測量尺度層級越高（名目→次序→區間→比例），可使用的統計方法越多。</div>
     </div>
-
-    <!-- 互動：辨認尺度 -->
     <div class="card">
       <div class="card-title">🎯 互動練習：點選辨認測量尺度</div>
-      <p style="font-size:.85rem;color:var(--gray);margin-bottom:14px">點選下方護理情境中的資料，看看它屬於哪種尺度：</p>
+      <p style="font-size:.84rem;color:var(--gray);margin-bottom:14px">點選下方護理情境中的資料，即時顯示說明：</p>
       <div class="scale-grid" id="scale-btns">
         <button class="scale-btn" data-name="性別（男／女）" data-type="nominal">性別（男／女）</button>
         <button class="scale-btn" data-name="疼痛等級（0-10）" data-type="ordinal">疼痛等級（0-10）</button>
         <button class="scale-btn" data-name="體溫（℃）" data-type="interval">體溫（℃）</button>
         <button class="scale-btn" data-name="體重（kg）" data-type="ratio">體重（kg）</button>
         <button class="scale-btn" data-name="血型（A/B/O/AB）" data-type="nominal">血型（A/B/O/AB）</button>
-        <button class="scale-btn" data-name="教育程度（國中/高中/大學）" data-type="ordinal">教育程度</button>
+        <button class="scale-btn" data-name="教育程度" data-type="ordinal">教育程度</button>
         <button class="scale-btn" data-name="收縮壓（mmHg）" data-type="ratio">收縮壓（mmHg）</button>
-        <button class="scale-btn" data-name="護理滿意度評分（1-5）" data-type="ordinal">護理滿意度（1-5）</button>
+        <button class="scale-btn" data-name="護理滿意度（1-5）" data-type="ordinal">護理滿意度（1-5）</button>
       </div>
       <div id="scale-answer"></div>
     </div>
-
-    <!-- 護理常考圖解 -->
     <div class="card">
       <div class="card-title">🏥 護理常考：各資料的測量尺度</div>
       <div class="g4">
-        <div class="memo-item">
-          <div class="memo-icon">⚥</div>
-          <div>
-            <div class="memo-name">性別</div>
-            <span class="chip chip-orange">名目</span>
-          </div>
-        </div>
-        <div class="memo-item">
-          <div class="memo-icon">😣</div>
-          <div>
-            <div class="memo-name">疼痛等級</div>
-            <span class="chip chip-orange">次序</span>
-          </div>
-        </div>
-        <div class="memo-item">
-          <div class="memo-icon">🌡️</div>
-          <div>
-            <div class="memo-name">體溫（℃）</div>
-            <span class="chip chip-blue">區間</span>
-          </div>
-        </div>
-        <div class="memo-item">
-          <div class="memo-icon">⚖️</div>
-          <div>
-            <div class="memo-name">體重（kg）</div>
-            <span class="chip chip-blue">比例</span>
-          </div>
-        </div>
-        <div class="memo-item">
-          <div class="memo-icon">🩸</div>
-          <div>
-            <div class="memo-name">血型</div>
-            <span class="chip chip-orange">名目</span>
-          </div>
-        </div>
-        <div class="memo-item">
-          <div class="memo-icon">🎓</div>
-          <div>
-            <div class="memo-name">教育程度</div>
-            <span class="chip chip-orange">次序</span>
-          </div>
-        </div>
-        <div class="memo-item">
-          <div class="memo-icon">💉</div>
-          <div>
-            <div class="memo-name">藥物劑量</div>
-            <span class="chip chip-blue">比例</span>
-          </div>
-        </div>
-        <div class="memo-item">
-          <div class="memo-icon">❤️</div>
-          <div>
-            <div class="memo-name">心跳（次/分）</div>
-            <span class="chip chip-blue">比例</span>
-          </div>
-        </div>
+        <div class="memo-item"><div class="memo-icon">⚥</div><div><div class="memo-name">性別</div><span class="chip chip-orange">名目</span></div></div>
+        <div class="memo-item"><div class="memo-icon">😣</div><div><div class="memo-name">疼痛等級</div><span class="chip chip-orange">次序</span></div></div>
+        <div class="memo-item"><div class="memo-icon">🌡️</div><div><div class="memo-name">體溫（℃）</div><span class="chip chip-blue">區間</span></div></div>
+        <div class="memo-item"><div class="memo-icon">⚖️</div><div><div class="memo-name">體重（kg）</div><span class="chip chip-blue">比例</span></div></div>
+        <div class="memo-item"><div class="memo-icon">🩸</div><div><div class="memo-name">血型</div><span class="chip chip-orange">名目</span></div></div>
+        <div class="memo-item"><div class="memo-icon">🎓</div><div><div class="memo-name">教育程度</div><span class="chip chip-orange">次序</span></div></div>
+        <div class="memo-item"><div class="memo-icon">💉</div><div><div class="memo-name">藥物劑量</div><span class="chip chip-blue">比例</span></div></div>
+        <div class="memo-item"><div class="memo-icon">❤️</div><div><div class="memo-name">心跳（次/分）</div><span class="chip chip-blue">比例</span></div></div>
       </div>
-      <div class="box box-orange" style="margin-top:14px">
-        <b>⚠️ 常見陷阱：體溫為何是「區間」而非「比例」？</b>
-        攝氏 0°C 並非代表「沒有溫度」（真正的零度是 -273.15°C），所以不能說 40°C 是 20°C 的「兩倍熱」。這就是為什麼體溫是區間尺度而非比例尺度。
-      </div>
+      <div class="box box-orange" style="margin-top:14px"><b>⚠️ 常見陷阱：體溫為何是「區間」？</b>攝氏 0°C 並非代表「沒有溫度」，所以不能說 40°C 是 20°C 的「兩倍熱」。這就是為什麼體溫是區間尺度而非比例尺度。</div>
     </div>
-
-    <!-- 如何選擇統計方法 -->
     <div class="card">
-      <div class="card-title">依資料型態選擇統計方法</div>
+      <div class="card-title">🧪 即時測驗：第二章</div>
+      <div id="quiz-2"></div>
+    </div>
+  </div>
+
+  <!-- ═══ SECTION 3: Ch3 ═══ -->
+  <div class="section" id="sec-3">
+    <div class="hero hero-3">
+      <h2>📐 第三章：描述統計</h2>
+      <p>用集中趨勢與離散趨勢來摘要資料，選擇正確的統計量是護理研究的基本功。</p>
+    </div>
+    <div class="card">
+      <div class="card-title">集中趨勢測量</div>
+      <div class="g3">
+        <div class="box box-blue"><b>平均數 Mean (x̄)</b>所有數值加總除以個數。<br>優點：利用全部數據。<br>缺點：受極端值影響大。</div>
+        <div class="box box-green"><b>中位數 Median (Md)</b>排序後中間的值。<br>優點：不受極端值影響。<br>適用：次序資料或偏態分佈。</div>
+        <div class="box box-orange"><b>眾數 Mode (Mo)</b>出現次數最多的值。<br>優點：適用名目資料。<br>缺點：可能有多個或沒有。</div>
+      </div>
+      <div class="box box-purple"><b>💡 護理選擇原則</b>資料偏態（如住院天數）→ 用中位數；名目資料（如血型）→ 用眾數；對稱分佈的連續資料 → 用平均數。</div>
+    </div>
+    <div class="card">
+      <div class="card-title">離散趨勢測量</div>
       <div class="tbl-wrap">
         <table>
-          <thead>
-            <tr><th>資料型態</th><th>描述統計</th><th>集中趨勢</th><th>推論統計（範例）</th></tr>
-          </thead>
+          <thead><tr><th>統計量</th><th>公式</th><th>說明</th><th>適用</th></tr></thead>
           <tbody>
-            <tr>
-              <td><span class="chip chip-orange">名目</span></td>
-              <td>次數、百分比</td>
-              <td>眾數</td>
-              <td>卡方檢定 χ²</td>
-            </tr>
-            <tr>
-              <td><span class="chip chip-orange">次序</span></td>
-              <td>次數、百分比、四分位</td>
-              <td>中位數</td>
-              <td>Mann-Whitney U、Wilcoxon</td>
-            </tr>
-            <tr>
-              <td><span class="chip chip-blue">區間</span></td>
-              <td>平均數、標準差</td>
-              <td>平均數</td>
-              <td>t 檢定、ANOVA</td>
-            </tr>
-            <tr>
-              <td><span class="chip chip-blue">比例</span></td>
-              <td>平均數、幾何平均、標準差</td>
-              <td>平均數</td>
-              <td>t 檢定、ANOVA、迴歸分析</td>
-            </tr>
+            <tr><td><strong>全距 Range</strong></td><td>最大值 − 最小值</td><td>最簡單，但僅用2個值</td><td>粗略了解分散程度</td></tr>
+            <tr><td><strong>四分位距 IQR</strong></td><td>Q3 − Q1</td><td>中間50%的範圍，不受極端值影響</td><td>偏態資料、箱形圖</td></tr>
+            <tr><td><strong>變異數 Variance</strong></td><td>Σ(xᵢ−x̄)² / (n−1)</td><td>偏差平方的平均（樣本用n−1）</td><td>計算標準差的基礎</td></tr>
+            <tr><td><strong>標準差 SD</strong></td><td>√Variance</td><td>與原始資料相同單位，最常用</td><td>常態分佈資料</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="formula">
+        <div class="formula-label">樣本標準差公式</div>
+        <div class="formula-math">s = √[ Σ(xᵢ − x̄)² / (n − 1) ]</div>
+      </div>
+      <div class="box box-yellow"><b>⚠️ 為何除以 n−1？</b>使用樣本資料估計母體標準差時，除以 n−1（自由度）可得到不偏估計量（Unbiased Estimator），避免低估母體變異。</div>
+    </div>
+    <div class="card">
+      <div class="card-title">🔢 互動計算機：即時統計計算</div>
+      <p style="font-size:.84rem;color:var(--gray);margin-bottom:10px">輸入數值（以空格或逗號分隔），即時獲得描述統計：</p>
+      <textarea class="calc-textarea" id="calc-input" placeholder="例：85 90 78 92 88 76 95 83"></textarea>
+      <button class="btn-calc" onclick="calcStats()">立即計算</button>
+      <div class="calc-result" id="calc-result">
+        <div class="calc-stat-row"><span class="calc-stat-lbl">個數 (n)</span><span class="calc-stat-val" id="cr-n">—</span></div>
+        <div class="calc-stat-row"><span class="calc-stat-lbl">平均數 (Mean)</span><span class="calc-stat-val" id="cr-mean">—</span></div>
+        <div class="calc-stat-row"><span class="calc-stat-lbl">中位數 (Median)</span><span class="calc-stat-val" id="cr-med">—</span></div>
+        <div class="calc-stat-row"><span class="calc-stat-lbl">眾數 (Mode)</span><span class="calc-stat-val" id="cr-mode">—</span></div>
+        <div class="calc-stat-row"><span class="calc-stat-lbl">最小值</span><span class="calc-stat-val" id="cr-min">—</span></div>
+        <div class="calc-stat-row"><span class="calc-stat-lbl">最大值</span><span class="calc-stat-val" id="cr-max">—</span></div>
+        <div class="calc-stat-row"><span class="calc-stat-lbl">全距 (Range)</span><span class="calc-stat-val" id="cr-range">—</span></div>
+        <div class="calc-stat-row"><span class="calc-stat-lbl">Q1（第25百分位）</span><span class="calc-stat-val" id="cr-q1">—</span></div>
+        <div class="calc-stat-row"><span class="calc-stat-lbl">Q3（第75百分位）</span><span class="calc-stat-val" id="cr-q3">—</span></div>
+        <div class="calc-stat-row"><span class="calc-stat-lbl">四分位距 (IQR)</span><span class="calc-stat-val" id="cr-iqr">—</span></div>
+        <div class="calc-stat-row"><span class="calc-stat-lbl">變異數 (s²)</span><span class="calc-stat-val" id="cr-var">—</span></div>
+        <div class="calc-stat-row"><span class="calc-stat-lbl">標準差 (s)</span><span class="calc-stat-val" id="cr-sd">—</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">🧪 即時測驗：第三章</div>
+      <div id="quiz-3"></div>
+    </div>
+  </div>
+
+  <!-- ═══ SECTION 4: Ch4 ═══ -->
+  <div class="section" id="sec-4">
+    <div class="hero hero-4">
+      <h2>🔔 第四章：機率與常態分佈</h2>
+      <p>常態分佈是推論統計的基礎，Z分數讓不同量尺的資料可以互相比較。</p>
+    </div>
+    <div class="card">
+      <div class="card-title">常態分佈 (Normal Distribution) 特徵</div>
+      <div class="g2">
+        <div>
+          <div class="box box-blue"><b>形狀特徵</b>對稱、鐘形曲線<br>平均數 = 中位數 = 眾數（三者相等）</div>
+          <div class="box box-green"><b>68-95-99.7 法則</b>μ ± 1σ → 含 68% 資料<br>μ ± 2σ → 含 95% 資料<br>μ ± 3σ → 含 99.7% 資料</div>
+        </div>
+        <div>
+          <div style="background:#1e293b;border-radius:10px;padding:16px;text-align:center">
+            <svg class="bell-svg" viewBox="0 0 480 120" xmlns="http://www.w3.org/2000/svg">
+              <defs><linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#3b82f6" stop-opacity=".3"/><stop offset="100%" stop-color="#3b82f6" stop-opacity="0"/></linearGradient></defs>
+              <path d="M20,110 Q120,108 160,90 Q200,60 240,15 Q280,60 320,90 Q360,108 460,110 Z" fill="url(#bg)" stroke="#60a5fa" stroke-width="2"/>
+              <line x1="240" y1="15" x2="240" y2="110" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="4,3"/>
+              <line x1="160" y1="90" x2="160" y2="110" stroke="#94a3b8" stroke-width="1" stroke-dasharray="3,2"/>
+              <line x1="320" y1="90" x2="320" y2="110" stroke="#94a3b8" stroke-width="1" stroke-dasharray="3,2"/>
+              <line x1="100" y1="107" x2="100" y2="110" stroke="#64748b" stroke-width="1" stroke-dasharray="2,2"/>
+              <line x1="380" y1="107" x2="380" y2="110" stroke="#64748b" stroke-width="1" stroke-dasharray="2,2"/>
+              <text x="240" y="118" text-anchor="middle" fill="#f59e0b" font-size="11">μ</text>
+              <text x="160" y="118" text-anchor="middle" fill="#94a3b8" font-size="10">μ-σ</text>
+              <text x="320" y="118" text-anchor="middle" fill="#94a3b8" font-size="10">μ+σ</text>
+              <text x="100" y="118" text-anchor="middle" fill="#64748b" font-size="10">μ-2σ</text>
+              <text x="380" y="118" text-anchor="middle" fill="#64748b" font-size="10">μ+2σ</text>
+              <text x="240" y="50" text-anchor="middle" fill="#bfdbfe" font-size="10">68%</text>
+              <text x="240" y="75" text-anchor="middle" fill="#93c5fd" font-size="10">95%</text>
+            </svg>
+            <div style="color:#94a3b8;font-size:.72rem;margin-top:4px">常態分佈曲線示意</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Z 分數（標準化分數）</div>
+      <div class="formula">
+        <div class="formula-label">Z 分數公式</div>
+        <div class="formula-math">Z = (X − μ) / σ</div>
+      </div>
+      <div class="g3">
+        <div class="box box-blue"><b>Z &gt; 0</b>觀測值高於平均數</div>
+        <div class="box box-green"><b>Z = 0</b>觀測值等於平均數</div>
+        <div class="box box-red"><b>Z &lt; 0</b>觀測值低於平均數</div>
+      </div>
+      <div class="box box-orange"><b>🏥 護理應用</b>某病人血壓 150 mmHg，所在病房平均血壓 μ = 130，σ = 10，則 Z = (150−130)/10 = 2.0，代表此病人血壓比平均高 2 個標準差，屬於偏高。</div>
+    </div>
+    <div class="card">
+      <div class="card-title">🧮 Z 分數即時計算機</div>
+      <div class="zcalc-inputs">
+        <div class="zcalc-field"><label>觀測值 X</label><input type="number" id="zc-x" placeholder="e.g. 150"></div>
+        <div class="zcalc-field"><label>平均數 μ</label><input type="number" id="zc-mu" placeholder="e.g. 130"></div>
+        <div class="zcalc-field"><label>標準差 σ</label><input type="number" id="zc-sd" placeholder="e.g. 10"></div>
+        <button class="btn-calc" onclick="calcZ()">計算 Z 分數</button>
+      </div>
+      <div class="calc-result" id="z-result">
+        <div class="calc-stat-row"><span class="calc-stat-lbl">Z 分數</span><span class="calc-stat-val" id="zr-z">—</span></div>
+        <div class="calc-stat-row"><span class="calc-stat-lbl">解讀</span><span class="calc-stat-val" id="zr-interp">—</span></div>
+        <div class="calc-stat-row"><span class="calc-stat-lbl">臨床意涵</span><span class="calc-stat-val" id="zr-clinical">—</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">🧪 即時測驗：第四章</div>
+      <div id="quiz-4"></div>
+    </div>
+  </div>
+
+  <!-- ═══ SECTION 5: Ch5 ═══ -->
+  <div class="section" id="sec-5">
+    <div class="hero hero-5">
+      <h2>🔬 第五章：假設檢定</h2>
+      <p>假設檢定是推論統計的核心工具，讓護理研究能夠以科學方式驗證介入效果。</p>
+    </div>
+    <div class="card">
+      <div class="card-title">研究假設的設定</div>
+      <div class="g2">
+        <div style="border:2px solid var(--red);border-radius:10px;padding:16px">
+          <div style="font-weight:700;color:var(--red);margin-bottom:8px;font-size:.93rem">H₀ 虛無假設（Null Hypothesis）</div>
+          <ul style="padding-left:16px;font-size:.85rem;line-height:2">
+            <li>預設「無差異」或「無效果」</li>
+            <li>統計檢定的對象</li>
+            <li>例：新護理介入對疼痛<strong>無影響</strong></li>
+          </ul>
+        </div>
+        <div style="border:2px solid var(--green);border-radius:10px;padding:16px">
+          <div style="font-weight:700;color:var(--green);margin-bottom:8px;font-size:.93rem">H₁ 對立假設（Alternative Hypothesis）</div>
+          <ul style="padding-left:16px;font-size:.85rem;line-height:2">
+            <li>研究者想驗證的假設</li>
+            <li>H₀ 被拒絕時，接受 H₁</li>
+            <li>例：新護理介入能<strong>降低</strong>疼痛</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">p 值與顯著水準（α）</div>
+      <div class="formula">
+        <div class="formula-label">決策規則</div>
+        <div class="formula-math">若 p值 ≤ α → 拒絕 H₀（結果具統計顯著性）</div>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>p 值範圍</th><th>與 α=0.05 的關係</th><th>統計決策</th><th>護理詮釋</th></tr></thead>
+          <tbody>
+            <tr><td>p = 0.001</td><td>p &lt; α</td><td style="color:var(--green);font-weight:700">拒絕 H₀</td><td>新介入效果極顯著</td></tr>
+            <tr><td>p = 0.03</td><td>p &lt; α</td><td style="color:var(--green);font-weight:700">拒絕 H₀</td><td>新介入有統計顯著效果</td></tr>
+            <tr><td>p = 0.07</td><td>p &gt; α</td><td style="color:var(--red);font-weight:700">不拒絕 H₀</td><td>無足夠證據顯示有效</td></tr>
+            <tr><td>p = 0.45</td><td>p &gt; α</td><td style="color:var(--red);font-weight:700">不拒絕 H₀</td><td>新介入效果不顯著</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="box box-yellow"><b>⚠️ 重要提醒</b>p &gt; 0.05 ≠ 「接受 H₀」，只代表沒有足夠證據拒絕 H₀。統計顯著 ≠ 臨床意義，效果量（Effect size）同樣重要！</div>
+    </div>
+    <div class="card">
+      <div class="card-title">型一與型二錯誤</div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th></th><th>H₀ 實際為真</th><th>H₀ 實際為假</th></tr></thead>
+          <tbody>
+            <tr><td><strong>拒絕 H₀</strong></td><td style="background:var(--red-light);color:#7f1d1d;font-weight:700">型一錯誤 (α)<br>False Positive</td><td style="background:var(--green-light);color:#14532d;font-weight:700">正確決策 ✓<br>檢定力 (1−β)</td></tr>
+            <tr><td><strong>不拒絕 H₀</strong></td><td style="background:var(--green-light);color:#14532d;font-weight:700">正確決策 ✓</td><td style="background:var(--orange-light);color:#7c2d12;font-weight:700">型二錯誤 (β)<br>False Negative</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="g2">
+        <div class="box box-red"><b>型一錯誤 (α=0.05)</b>實際無效，卻宣稱有效。護理情境：無效療法卻被當成有效推廣，可能危害病人。</div>
+        <div class="box box-orange"><b>型二錯誤 (β)</b>實際有效，卻認為無效。護理情境：有效療法卻被放棄，病人失去受益機會。</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">🧪 即時測驗：第五章</div>
+      <div id="quiz-5"></div>
+    </div>
+  </div>
+
+  <!-- ═══ SECTION 6: Ch6 ═══ -->
+  <div class="section" id="sec-6">
+    <div class="hero hero-6">
+      <h2>📊 第六章：常用統計方法</h2>
+      <p>選擇正確的統計方法是護理研究的關鍵，本章介紹四種護理研究最常用的統計檢定。</p>
+    </div>
+    <div class="card">
+      <div class="card-title">四大常用統計方法概覽</div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>方法</th><th>依變項類型</th><th>組別數</th><th>護理應用範例</th></tr></thead>
+          <tbody>
+            <tr><td><span class="chip chip-blue">獨立樣本 t 檢定</span></td><td>連續（區間/比例）</td><td>2組（不同人）</td><td>比較男女護理師的工作壓力分數</td></tr>
+            <tr><td><span class="chip chip-green">配對樣本 t 檢定</span></td><td>連續（區間/比例）</td><td>2組（同一人前後）</td><td>介入前後的血壓變化</td></tr>
+            <tr><td><span class="chip chip-orange">卡方檢定 χ²</span></td><td>類別（名目/次序）</td><td>2組以上</td><td>性別與吸菸行為的關聯性</td></tr>
+            <tr><td><span class="chip chip-purple">單因子 ANOVA</span></td><td>連續（區間/比例）</td><td>3組以上</td><td>三種護理措施的疼痛緩解效果</td></tr>
           </tbody>
         </table>
       </div>
     </div>
-
-    <!-- Quiz -->
     <div class="card">
-      <div class="card-title">🧪 即時測驗：第二章</div>
-      <div id="quiz-1"></div>
+      <div class="card-title">t 檢定：兩種情境比較</div>
+      <div class="g2">
+        <div class="compare-card" style="border-color:var(--blue)">
+          <div style="font-weight:700;color:var(--blue);margin-bottom:10px">🔵 獨立樣本 t 檢定</div>
+          <div class="box box-blue" style="margin:0 0 8px"><b>適用條件</b>兩組為不同的人（獨立樣本），且資料為連續尺度</div>
+          <div class="box box-blue" style="margin:0"><b>護理例子</b>比較「A護理方案組」vs「B護理方案組」的焦慮分數</div>
+        </div>
+        <div class="compare-card" style="border-color:var(--green)">
+          <div style="font-weight:700;color:var(--green);margin-bottom:10px">🟢 配對樣本 t 檢定</div>
+          <div class="box box-green" style="margin:0 0 8px"><b>適用條件</b>同一組人在兩個時間點測量，或配對設計</div>
+          <div class="box box-green" style="margin:0"><b>護理例子</b>同一批病人介入<strong>前</strong>與介入<strong>後</strong>的血壓比較</div>
+        </div>
+      </div>
     </div>
-
-  </div><!-- end sec-1 -->
+    <div class="card">
+      <div class="card-title">🌳 互動：統計方法選擇指南</div>
+      <p style="font-size:.84rem;color:var(--gray);margin-bottom:14px">依序回答問題，系統自動推薦適合的統計方法：</p>
+      <div class="dtree" id="dtree">
+        <div class="dtree-q" id="dt-q">您的依變項（想分析的結果變項）是什麼類型？</div>
+        <div class="dtree-opts" id="dt-opts">
+          <button class="dtree-btn" onclick="dtAnswer('continuous')">連續資料（如血壓、體重、分數）</button>
+          <button class="dtree-btn" onclick="dtAnswer('categorical')">類別資料（如是/否、血型、等級）</button>
+        </div>
+        <div class="dtree-result" id="dt-result">
+          <div class="dtree-result-name" id="dt-method">—</div>
+          <div id="dt-desc" style="font-size:.84rem;line-height:1.7"></div>
+          <button class="dtree-reset" onclick="dtReset()">↩ 重新選擇</button>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">🧪 即時測驗：第六章</div>
+      <div id="quiz-6"></div>
+    </div>
+  </div>
 
 </div><!-- end #main -->
 </div><!-- end #app -->
 
 <script>
 // ──────────────────────────────────────────────
-// 1. Navigation
+// Progress (localStorage)
+// ──────────────────────────────────────────────
+var STORE = 'nbio_v2';
+function loadProg() {
+  try { return JSON.parse(localStorage.getItem(STORE)) || {}; } catch(e) { return {}; }
+}
+function saveProg(p) {
+  try { localStorage.setItem(STORE, JSON.stringify(p)); } catch(e) {}
+}
+function getCh(n) {
+  var p = loadProg();
+  return p['c' + n] || { visited: false, score: -1, total: 0, pct: -1 };
+}
+function setCh(n, obj) {
+  var p = loadProg();
+  p['c' + n] = Object.assign(getCh(n), obj);
+  saveProg(p);
+  updateSidebarProgress();
+}
+
+// ──────────────────────────────────────────────
+// Navigation
 // ──────────────────────────────────────────────
 var currentCh = 0;
-var titles = ['第一章：生物統計概論', '第二章：資料種類與測量尺度'];
+var TOTAL = 6;
+var titles = [
+  '學習進度總覽',
+  '第一章：生物統計概論',
+  '第二章：資料種類與測量尺度',
+  '第三章：描述統計',
+  '第四章：機率與常態分佈',
+  '第五章：假設檢定',
+  '第六章：常用統計方法'
+];
 
 function goSection(n) {
   currentCh = n;
-  // hide all sections
-  var secs = document.querySelectorAll('.section');
-  for (var i = 0; i < secs.length; i++) {
-    secs[i].classList.remove('show');
-  }
-  // show target
+  document.querySelectorAll('.section').forEach(function(s){ s.classList.remove('show'); });
   document.getElementById('sec-' + n).classList.add('show');
-  // update nav
-  var navs = document.querySelectorAll('.nav-link');
-  for (var i = 0; i < navs.length; i++) {
-    navs[i].classList.remove('active');
-  }
+  document.querySelectorAll('.nav-link').forEach(function(l){ l.classList.remove('active'); });
   document.getElementById('nav-' + n).classList.add('active');
-  // update topbar
   document.getElementById('topbar-title').textContent = titles[n];
-  document.getElementById('tb-badge').textContent = 'Ch ' + (n + 1) + ' / 2';
-  // update next button
-  var btnNext = document.getElementById('btn-next');
-  if (n === 1) {
-    btnNext.textContent = '回第一章';
-  } else {
-    btnNext.textContent = '下一章 →';
-  }
-  // scroll top
+  document.getElementById('tb-badge').textContent = n === 0 ? '總覽' : ('Ch ' + n + ' / ' + TOTAL);
+  var btn = document.getElementById('btn-next');
+  btn.textContent = n === TOTAL ? '回首頁' : (n === 0 ? '開始學習 →' : '下一章 →');
   window.scrollTo(0, 0);
   closeSidebar();
+  if (n > 0) {
+    setCh(n, { visited: true });
+    if (!quizState[n]) initQuiz(n);
+  } else {
+    renderDashboard();
+  }
 }
 
 function goNext() {
-  if (currentCh === 0) {
-    goSection(1);
-  } else {
-    goSection(0);
-  }
+  if (currentCh >= TOTAL) goSection(0);
+  else goSection(currentCh + 1);
 }
 
 function openSidebar() {
   document.getElementById('sidebar').classList.add('open');
   document.getElementById('overlay').classList.add('show');
 }
-
 function closeSidebar() {
   document.getElementById('sidebar').classList.remove('open');
   document.getElementById('overlay').classList.remove('show');
 }
 
 // ──────────────────────────────────────────────
-// 2. Scale Picker
+// Sidebar progress bar
+// ──────────────────────────────────────────────
+function updateSidebarProgress() {
+  var done = 0;
+  for (var i = 1; i <= TOTAL; i++) {
+    var c = getCh(i);
+    if (c.pct >= 0) done++;
+    var star = getStars(c.pct);
+    var nstar = document.getElementById('nstar-' + i);
+    if (nstar) nstar.textContent = c.pct >= 0 ? (star > 0 ? '★'.repeat(star) : '○') : '';
+  }
+  var pct = Math.round(done / TOTAL * 100);
+  var bar = document.getElementById('sidebar-progress');
+  var txt = document.getElementById('sidebar-progress-text');
+  if (bar) bar.style.width = pct + '%';
+  if (txt) txt.textContent = done + ' / ' + TOTAL + ' 章節完成';
+}
+
+function getStars(pct) {
+  if (pct < 0) return 0;
+  if (pct >= 80) return 3;
+  if (pct >= 60) return 2;
+  return 1;
+}
+
+// ──────────────────────────────────────────────
+// Dashboard
+// ──────────────────────────────────────────────
+var chColors = ['','--blue','--green','--purple','--blue','--red','--yellow'];
+var chIcons = ['','📊','📁','📐','🔔','🔬','📈'];
+var chTitles = ['','生物統計概論','資料與測量尺度','描述統計','機率與常態分佈','假設檢定','常用統計方法'];
+
+function renderDashboard() {
+  var visited = 0, quizDone = 0, totalPct = 0, pctCount = 0, totalStars = 0;
+  for (var i = 1; i <= TOTAL; i++) {
+    var c = getCh(i);
+    if (c.visited) visited++;
+    if (c.pct >= 0) { quizDone++; totalPct += c.pct; pctCount++; totalStars += getStars(c.pct); }
+  }
+  document.getElementById('ds-visited').textContent = visited;
+  document.getElementById('ds-quizzes').textContent = quizDone;
+  document.getElementById('ds-avg').textContent = pctCount > 0 ? Math.round(totalPct / pctCount) + '%' : '—';
+  document.getElementById('ds-stars').textContent = totalStars;
+
+  var grid = document.getElementById('dash-ch-grid');
+  var html = '';
+  for (var i = 1; i <= TOTAL; i++) {
+    var c = getCh(i);
+    var stars = getStars(c.pct);
+    var starsHtml = c.pct >= 0 ? '★'.repeat(stars) + '☆'.repeat(3 - stars) : '☆☆☆';
+    var status = c.pct >= 0 ? (c.pct >= 60 ? 'done' : 'partial') : (c.visited ? 'partial' : 'unvisited');
+    var scoreHtml = c.pct >= 0 ? ('答對率：' + c.score + ' / ' + c.total + '（' + c.pct + '%）') : (c.visited ? '尚未完成測驗' : '尚未學習');
+    html += '<div class="dash-ch-card ' + status + '" onclick="goSection(' + i + ')">';
+    html += '<div class="dash-ch-num">' + chIcons[i] + ' 第' + i + '章</div>';
+    html += '<div class="dash-ch-title">' + chTitles[i] + '</div>';
+    html += '<div class="dash-stars">' + starsHtml + '</div>';
+    html += '<div class="dash-ch-score">' + scoreHtml + '</div>';
+    if (c.pct >= 0) {
+      html += '<div class="progress-bar-wrap"><div class="progress-bar-fill ' + (c.pct >= 60 ? 'fill-green' : 'fill-orange') + '" style="width:' + c.pct + '%"></div></div>';
+    }
+    html += '</div>';
+  }
+  grid.innerHTML = html;
+
+  // Recommendations
+  var rec = document.getElementById('dash-rec');
+  var recHtml = '';
+  var needReview = [];
+  var notStarted = [];
+  for (var i = 1; i <= TOTAL; i++) {
+    var c = getCh(i);
+    if (c.pct >= 0 && c.pct < 60) needReview.push(i);
+    else if (!c.visited) notStarted.push(i);
+  }
+  if (quizDone === 0 && visited === 0) {
+    recHtml = '<div class="box box-blue"><b>👋 歡迎！</b>從第一章開始您的生物統計學習之旅。點選左側章節或上方章節卡片即可開始。</div>';
+  } else {
+    if (needReview.length > 0) {
+      recHtml += '<div class="box box-red"><b>⚠️ 建議複習</b>第 ' + needReview.map(function(n){ return n; }).join('、') + ' 章答對率低於 60%，建議重新閱讀內容後再次測驗。</div>';
+    }
+    if (notStarted.length > 0) {
+      recHtml += '<div class="box box-blue"><b>📖 繼續學習</b>第 ' + notStarted.slice(0, 3).map(function(n){ return n; }).join('、') + ' 章尚未學習，繼續進行！</div>';
+    }
+    if (needReview.length === 0 && quizDone > 0) {
+      recHtml += '<div class="box box-green"><b>🎉 表現優秀！</b>已完成測驗的章節答對率都在 60% 以上，繼續保持！</div>';
+    }
+    if (quizDone === TOTAL && totalStars >= TOTAL * 2) {
+      recHtml += '<div class="box box-purple"><b>🏆 恭喜！</b>您已完成全部章節並取得優秀成績！可重新作答挑戰滿分。</div>';
+    }
+  }
+  rec.innerHTML = recHtml;
+}
+
+// ──────────────────────────────────────────────
+// Scale Picker (Ch2)
 // ──────────────────────────────────────────────
 var scaleData = {
-  nominal: {
-    label: '名目尺度 Nominal',
-    bg: '#fff7ed',
-    border: '#ea580c',
-    text: '只有分類功能，無大小順序。不能計算平均數，只能統計次數與百分比。適用統計：卡方檢定（χ²）。'
-  },
-  ordinal: {
-    label: '次序尺度 Ordinal',
-    bg: '#fff7ed',
-    border: '#ea580c',
-    text: '有順序但各等級間距不一定相等，不能確定差異的精確大小。適用統計：中位數、Spearman 相關、Mann-Whitney U。'
-  },
-  interval: {
-    label: '區間尺度 Interval',
-    bg: '#eff6ff',
-    border: '#2563eb',
-    text: '有順序且等距，但無絕對零點（0 不代表「無」）。可計算平均數和標準差。適用統計：t 檢定、ANOVA、Pearson 相關。'
-  },
-  ratio: {
-    label: '比例尺度 Ratio',
-    bg: '#eff6ff',
-    border: '#2563eb',
-    text: '最高層次的測量。有順序、等距，且有絕對零點，可計算倍數關係。適用統計：所有統計方法，包含幾何平均數。'
-  }
+  nominal: { label:'名目尺度 Nominal', bg:'#fff7ed', border:'#ea580c', text:'只有分類功能，無大小順序。不能計算平均數，只能統計次數與百分比。適用統計：卡方檢定（χ²）。' },
+  ordinal: { label:'次序尺度 Ordinal', bg:'#fff7ed', border:'#ea580c', text:'有順序但各等級間距不一定相等，不能確定差異的精確大小。適用統計：中位數、Spearman 相關、Mann-Whitney U。' },
+  interval: { label:'區間尺度 Interval', bg:'#eff6ff', border:'#2563eb', text:'有順序且等距，但無絕對零點（0 不代表「無」）。可計算平均數和標準差。適用統計：t 檢定、ANOVA、Pearson 相關。' },
+  ratio: { label:'比例尺度 Ratio', bg:'#eff6ff', border:'#2563eb', text:'最高層次的測量。有順序、等距，且有絕對零點，可計算倍數關係。適用統計：所有統計方法，包含幾何平均數。' }
 };
-
-// attach events to scale buttons
 (function() {
   var btns = document.querySelectorAll('.scale-btn');
-  for (var i = 0; i < btns.length; i++) {
-    (function(btn) {
-      btn.addEventListener('click', function() {
-        // clear selection
-        var all = document.querySelectorAll('.scale-btn');
-        for (var j = 0; j < all.length; j++) {
-          all[j].classList.remove('picked');
-        }
-        btn.classList.add('picked');
-        var type = btn.getAttribute('data-type');
-        var name = btn.getAttribute('data-name');
-        var info = scaleData[type];
-        var ans = document.getElementById('scale-answer');
-        ans.style.display = 'block';
-        ans.style.background = info.bg;
-        ans.style.borderColor = info.border;
-        ans.innerHTML = '<strong>' + name + '：' + info.label + '</strong><br><span style="font-size:.85rem">' + info.text + '</span>';
-      });
-    })(btns[i]);
-  }
+  btns.forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      btns.forEach(function(b){ b.classList.remove('picked'); });
+      btn.classList.add('picked');
+      var type = btn.getAttribute('data-type');
+      var name = btn.getAttribute('data-name');
+      var info = scaleData[type];
+      var ans = document.getElementById('scale-answer');
+      ans.style.display = 'block';
+      ans.style.background = info.bg;
+      ans.style.borderColor = info.border;
+      ans.innerHTML = '<strong>' + name + '：' + info.label + '</strong><br><span style="font-size:.85rem">' + info.text + '</span>';
+    });
+  });
 })();
 
 // ──────────────────────────────────────────────
-// 3. Quiz Engine
+// Calculator (Ch3)
+// ──────────────────────────────────────────────
+function calcStats() {
+  var raw = document.getElementById('calc-input').value;
+  var nums = raw.split(/[\s,，]+/).map(function(s){ return parseFloat(s.trim()); }).filter(function(n){ return !isNaN(n); });
+  if (nums.length < 2) { showToast('請至少輸入 2 個數值'); return; }
+  nums.sort(function(a,b){ return a-b; });
+  var n = nums.length;
+  var sum = nums.reduce(function(a,b){ return a+b; }, 0);
+  var mean = sum / n;
+  var med = n % 2 === 0 ? (nums[n/2-1] + nums[n/2]) / 2 : nums[Math.floor(n/2)];
+  // mode
+  var freq = {};
+  nums.forEach(function(x){ freq[x] = (freq[x]||0)+1; });
+  var maxF = Math.max.apply(null, Object.values(freq));
+  var modes = Object.keys(freq).filter(function(k){ return freq[k] === maxF; }).map(Number);
+  var modeStr = maxF === 1 ? '無眾數' : modes.join('、');
+  var range = nums[n-1] - nums[0];
+  var q1 = percentile(nums, 25);
+  var q3 = percentile(nums, 75);
+  var iqr = q3 - q1;
+  var variance = nums.reduce(function(acc,x){ return acc + Math.pow(x-mean,2); },0) / (n-1);
+  var sd = Math.sqrt(variance);
+
+  var r = document.getElementById('calc-result');
+  r.style.display = 'block';
+  set('cr-n', n);
+  set('cr-mean', mean.toFixed(4));
+  set('cr-med', med.toFixed(4));
+  set('cr-mode', modeStr);
+  set('cr-min', nums[0]);
+  set('cr-max', nums[n-1]);
+  set('cr-range', range.toFixed(4));
+  set('cr-q1', q1.toFixed(4));
+  set('cr-q3', q3.toFixed(4));
+  set('cr-iqr', iqr.toFixed(4));
+  set('cr-var', variance.toFixed(4));
+  set('cr-sd', sd.toFixed(4));
+
+  function set(id, v) { document.getElementById(id).textContent = v; }
+}
+
+function percentile(sorted, p) {
+  var idx = (p / 100) * (sorted.length - 1);
+  var lo = Math.floor(idx), hi = Math.ceil(idx);
+  return sorted[lo] + (sorted[hi] - sorted[lo]) * (idx - lo);
+}
+
+// ──────────────────────────────────────────────
+// Z-score Calculator (Ch4)
+// ──────────────────────────────────────────────
+function calcZ() {
+  var x = parseFloat(document.getElementById('zc-x').value);
+  var mu = parseFloat(document.getElementById('zc-mu').value);
+  var sd = parseFloat(document.getElementById('zc-sd').value);
+  if (isNaN(x) || isNaN(mu) || isNaN(sd)) { showToast('請填入完整的 X、μ、σ 值'); return; }
+  if (sd <= 0) { showToast('標準差 σ 必須大於 0'); return; }
+  var z = (x - mu) / sd;
+  var interp = z > 0 ? '高於平均 ' + Math.abs(z).toFixed(2) + ' 個標準差' : z < 0 ? '低於平均 ' + Math.abs(z).toFixed(2) + ' 個標準差' : '恰好等於平均值';
+  var clinical = Math.abs(z) > 2 ? '⚠️ 偏離平均超過2個標準差，屬於異常範圍（約5%）' : Math.abs(z) > 1 ? '輕微偏離平均（68% 範圍之外）' : '在正常範圍內（±1σ，68%）';
+  var r = document.getElementById('z-result');
+  r.style.display = 'block';
+  document.getElementById('zr-z').textContent = z.toFixed(4);
+  document.getElementById('zr-interp').textContent = interp;
+  document.getElementById('zr-clinical').textContent = clinical;
+}
+
+// ──────────────────────────────────────────────
+// Decision Tree (Ch6)
+// ──────────────────────────────────────────────
+var dtState = 0;
+var dtPath = {};
+var dtSteps = [
+  {
+    q: '您的依變項（想分析的結果變項）是什麼類型？',
+    opts: [
+      { label: '連續資料（如血壓、體重、分數）', key: 'continuous' },
+      { label: '類別資料（如是/否、血型、等級）', key: 'categorical' }
+    ]
+  },
+  {
+    q: '（連續資料）您在比較幾個組別？',
+    opts: [
+      { label: '2 組', key: '2grp' },
+      { label: '3 組以上', key: 'multi' }
+    ]
+  },
+  {
+    q: '（2組連續資料）這 2 組的關係是？',
+    opts: [
+      { label: '獨立樣本（不同的人）', key: 'indep' },
+      { label: '配對樣本（同一人前後，或配對）', key: 'paired' }
+    ]
+  }
+];
+var dtResults = {
+  indep: { name: '✅ 獨立樣本 t 檢定', desc: '適用於比較兩組獨立樣本的平均數差異。<br><strong>前提：</strong>資料需符合常態分佈，兩組變異數相等（可用 Levene 檢定確認）。<br><strong>護理例子：</strong>比較實驗組與對照組病人的疼痛分數平均值。' },
+  paired: { name: '✅ 配對樣本 t 檢定', desc: '適用於同一群人在介入前後的測量比較。<br><strong>前提：</strong>前後差值需符合常態分佈。<br><strong>護理例子：</strong>量測護理介入前後，同一批病人的血壓變化。' },
+  multi: { name: '✅ 單因子 ANOVA', desc: '適用於比較 3 組或以上獨立組別的平均數。<br><strong>前提：</strong>各組符合常態分佈，且變異數同質。若 ANOVA 顯著，需進行事後比較（如 Tukey）。<br><strong>護理例子：</strong>比較三種不同護理措施對病人滿意度的影響。' },
+  categorical: { name: '✅ 卡方檢定（χ²）', desc: '適用於兩個類別變項之間的關聯性分析。<br><strong>前提：</strong>每個期望次數 ≥ 5（小樣本用 Fisher 精確檢定）。<br><strong>護理例子：</strong>分析「性別（男/女）」與「是否符合洗手規範（是/否）」之間的關聯。' }
+};
+
+function dtAnswer(key) {
+  dtPath[dtState] = key;
+  if (dtState === 0 && key === 'categorical') { showDtResult('categorical'); return; }
+  if (dtState === 0 && key === 'continuous') { dtState = 1; renderDt(); return; }
+  if (dtState === 1 && key === 'multi') { showDtResult('multi'); return; }
+  if (dtState === 1 && key === '2grp') { dtState = 2; renderDt(); return; }
+  if (dtState === 2) { showDtResult(key); return; }
+}
+
+function showDtResult(key) {
+  var res = dtResults[key];
+  document.getElementById('dt-opts').innerHTML = '';
+  document.getElementById('dt-q').textContent = '推薦方法：';
+  var r = document.getElementById('dt-result');
+  r.style.display = 'block';
+  document.getElementById('dt-method').textContent = res.name;
+  document.getElementById('dt-desc').innerHTML = res.desc;
+}
+
+function renderDt() {
+  var step = dtSteps[dtState];
+  document.getElementById('dt-q').textContent = step.q;
+  var optsHtml = '';
+  step.opts.forEach(function(o) {
+    optsHtml += '<button class="dtree-btn" onclick="dtAnswer(\'' + o.key + '\')">' + o.label + '</button>';
+  });
+  document.getElementById('dt-opts').innerHTML = optsHtml;
+}
+
+function dtReset() {
+  dtState = 0; dtPath = {};
+  document.getElementById('dt-result').style.display = 'none';
+  renderDt();
+}
+
+// ──────────────────────────────────────────────
+// Toast
+// ──────────────────────────────────────────────
+var toastTimer;
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ t.classList.remove('show'); }, 3000);
+}
+
+// ──────────────────────────────────────────────
+// Quiz Engine
 // ──────────────────────────────────────────────
 var quizData = {
-  0: [
-    {
-      q: '以下哪一項屬於「母體參數」？',
-      opts: ['樣本平均數 x̄', '全台灣護理師的平均年齡 μ', '某醫院 50 位護理師的平均薪資', '問卷中 100 人的平均分數'],
-      ans: 1,
-      exp: '母體參數描述整個母體，用希臘字母（μ、σ）表示。「全台灣護理師的平均年齡」描述的是整個母體，是母體參數。'
-    },
-    {
-      q: '護理研究中，從某醫院隨機選取 150 位病患進行調查，這 150 位病患稱為？',
-      opts: ['母體', '參數', '樣本', '統計量'],
-      ans: 2,
-      exp: '從母體（所有病患）中抽取的部分個體稱為「樣本」。樣本的特徵值稱為「統計量」（用英文字母表示，如 x̄）。'
-    },
-    {
-      q: '描述統計（Descriptive Statistics）的主要目的是？',
-      opts: ['用樣本推估母體', '做出因果推論', '整理與摘要資料的特徵', '進行假設檢定'],
-      ans: 2,
-      exp: '描述統計的目的是整理、摘要並呈現資料的特徵（如平均數、標準差、圖表），不做推論。推論統計才是用樣本推估母體。'
-    }
-  ],
   1: [
-    {
-      q: '護理師記錄病人的「疼痛等級（0-10 分）」，屬於哪種測量尺度？',
-      opts: ['名目尺度', '次序尺度', '區間尺度', '比例尺度'],
-      ans: 1,
-      exp: '疼痛等級有順序（3 分比 1 分痛），但各等級間距不一定相等（從 1 分到 2 分的痛感增加，不一定等於從 5 分到 6 分），屬於次序尺度。'
-    },
-    {
-      q: '「血型（A, B, O, AB）」屬於哪種測量尺度？',
-      opts: ['名目尺度', '次序尺度', '區間尺度', '比例尺度'],
-      ans: 0,
-      exp: '血型只有分類功能，各類別之間沒有大小順序之分（A 型不比 B 型「更大」），屬於最低層次的名目尺度。'
-    },
-    {
-      q: '下列哪個資料屬於「比例尺度」？',
-      opts: ['攝氏體溫', '護理滿意度（1-5 分）', '病人性別', '病人體重（kg）'],
-      ans: 3,
-      exp: '體重（kg）有真正的零點（0 kg 代表沒有重量），可以說「80 kg 是 40 kg 的兩倍重」，屬於比例尺度。攝氏體溫無真正零點，是區間尺度。'
-    },
-    {
-      q: '護理師想計算「病人疼痛評分（0-10）」的平均數，此做法在統計上是否恰當？',
-      opts: ['恰當，因為疼痛分數有順序', '不恰當，次序尺度不宜計算平均數', '恰當，因為有 0 的真正零點', '不恰當，疼痛分數是名目尺度'],
-      ans: 1,
-      exp: '疼痛評分是次序尺度，各等級間距不等，嚴格來說不宜計算平均數（應用中位數）。雖然臨床實務上有時仍計算平均，但在統計原則上，次序尺度應使用中位數和四分位距。'
-    }
+    { q:'以下哪一項屬於「母體參數」？', opts:['樣本平均數 x̄','全台灣護理師的平均年齡 μ','某醫院 50 位護理師的平均薪資','問卷中 100 人的平均分數'], ans:1, exp:'母體參數描述整個母體，用希臘字母（μ、σ）表示。「全台灣護理師的平均年齡」描述的是整個母體，因此是母體參數。' },
+    { q:'從某醫院隨機選取 150 位病患進行調查，這 150 位病患稱為？', opts:['母體','參數','樣本','統計量'], ans:2, exp:'從母體（所有病患）中抽取的部分個體稱為「樣本」。樣本的特徵值稱為「統計量」，用英文字母表示（x̄、s）。' },
+    { q:'描述統計（Descriptive Statistics）的主要目的是？', opts:['用樣本推估母體','做出因果推論','整理與摘要資料的特徵','進行假設檢定'], ans:2, exp:'描述統計的目的是整理、摘要並呈現資料的特徵（如平均數、標準差、圖表），不做推論。推論統計才是用樣本推估母體。' }
+  ],
+  2: [
+    { q:'護理師記錄病人的「疼痛等級（0-10 分）」，屬於哪種測量尺度？', opts:['名目尺度','次序尺度','區間尺度','比例尺度'], ans:1, exp:'疼痛等級有順序（3 分比 1 分痛），但各等級間距不一定相等，屬於次序尺度。應使用中位數而非平均數描述。' },
+    { q:'「血型（A, B, O, AB）」屬於哪種測量尺度？', opts:['名目尺度','次序尺度','區間尺度','比例尺度'], ans:0, exp:'血型只有分類功能，各類別之間沒有大小順序之分（A 型不比 B 型「更大」），屬於最低層次的名目尺度。' },
+    { q:'下列哪個資料屬於「比例尺度」？', opts:['攝氏體溫','護理滿意度（1-5 分）','病人性別','病人體重（kg）'], ans:3, exp:'體重（kg）有真正的零點（0 kg 代表沒有重量），可以說「80 kg 是 40 kg 的兩倍重」，屬於比例尺度。攝氏體溫無真正零點，是區間尺度。' },
+    { q:'護理師想計算「病人疼痛評分（0-10）」的平均數，此做法在統計上是否恰當？', opts:['恰當，因為疼痛分數有順序','不恰當，次序尺度不宜計算平均數','恰當，因為有 0 的真正零點','不恰當，疼痛分數是名目尺度'], ans:1, exp:'疼痛評分是次序尺度，各等級間距不等，嚴格統計原則上應使用中位數和四分位距，而非平均數。' }
+  ],
+  3: [
+    { q:'下列哪組資料，平均數會受到極端值（離群值）嚴重影響而失去代表性？', opts:['10, 12, 11, 13, 12','25, 26, 24, 27, 25','3, 4, 5, 4, 100','70, 72, 71, 69, 73'], ans:2, exp:'3,4,5,4,100 中，100 是極端值，使平均數偏高（= 23.2），不能代表多數資料。此時應使用中位數（= 4）來描述資料。' },
+    { q:'5 位病人的疼痛分數為：7, 3, 5, 5, 4，中位數為？', opts:['4','5','4.8','3'], ans:1, exp:'先排序：3, 4, 5, 5, 7。共 5 個數（奇數），中位數為第 3 個 = 5。' },
+    { q:'「變異數（Variance）」與「標準差（SD）」的關係是？', opts:['SD = Variance × 2','SD = Variance / n','SD = √Variance','Variance = √SD'], ans:2, exp:'標準差是變異數的平方根（SD = √Variance），因此標準差與原始資料有相同的單位，比變異數更直觀。' },
+    { q:'某研究報告護理滿意度的 IQR = 2（分），這代表？', opts:['所有分數的範圍是 2 分','中間 50% 的受訪者分數範圍為 2 分','平均分數為 2 分','標準差為 2 分'], ans:1, exp:'四分位距（IQR = Q3 − Q1）代表中間 50% 的資料範圍。IQR = 2 表示第 25 到第 75 百分位的分數差距為 2 分。' }
+  ],
+  4: [
+    { q:'常態分佈中，平均數 ± 2 個標準差（μ ± 2σ）大約包含多少比例的觀測值？', opts:['68%','95%','99.7%','50%'], ans:1, exp:'68-95-99.7 法則：μ±1σ ≈ 68%，μ±2σ ≈ 95%，μ±3σ ≈ 99.7%。這是常態分佈最重要的特性。' },
+    { q:'某病人血壓的 Z 分數為 +2.5，代表其血壓？', opts:['比平均值低 2.5 個標準差','等於平均值','比平均值高 2.5 個標準差','無法判斷'], ans:2, exp:'Z = (X − μ) / σ，正值代表高於平均。Z = +2.5 表示此病人血壓比平均值高 2.5 個標準差，落在約前 1% 的範圍，屬偏高。' },
+    { q:'護理師收入符合常態分佈，μ = 50,000，σ = 5,000，某護理師收入 60,000，Z 分數為？', opts:['1.0','1.5','2.0','2.5'], ans:2, exp:'Z = (60,000 − 50,000) / 5,000 = 10,000 / 5,000 = 2.0。代表此護理師收入比平均高 2 個標準差。' },
+    { q:'下列何者不是常態分佈的特徵？', opts:['左右對稱的鐘形曲線','平均數 = 中位數 = 眾數','資料呈右偏（正偏）分佈','曲線下面積總和 = 1'], ans:2, exp:'常態分佈是對稱的鐘形曲線，偏態分佈（如右偏）不是常態分佈的特徵。右偏時中位數 < 平均數（平均數被右側極端值拉高）。' }
+  ],
+  5: [
+    { q:'「新的護理介入對病人焦慮無影響」，此陳述屬於哪種假設？', opts:['對立假設 H₁','研究假設','虛無假設 H₀','雙尾假設'], ans:2, exp:'虛無假設（H₀）預設「無差異」或「無效果」，是統計檢定的對象。「對焦慮無影響」正是無效果的陳述，屬於 H₀。' },
+    { q:'研究結果 p = 0.03，顯著水準 α = 0.05，統計結論為？', opts:['不拒絕 H₀，無顯著差異','拒絕 H₀，有統計顯著性','接受 H₀','無法作出結論'], ans:1, exp:'p = 0.03 < α = 0.05，滿足拒絕 H₀ 的條件，故「拒絕虛無假設，結果具統計顯著性」。但請記住，統計顯著 ≠ 臨床意義。' },
+    { q:'研究者宣稱新療法有效（但實際上無效），此研究者犯了哪種錯誤？', opts:['型二錯誤（β）','型一錯誤（α）','抽樣誤差','測量誤差'], ans:1, exp:'型一錯誤（False Positive）：H₀ 實際為真（無效），卻拒絕 H₀（宣稱有效）。發生機率等於顯著水準 α，通常設為 0.05。' },
+    { q:'研究者不知道新藥效果的方向（可能有效、可能有害），應採用哪種假設檢定？', opts:['單尾檢定（右尾）','單尾檢定（左尾）','雙尾檢定','不須檢定'], ans:2, exp:'雙尾檢定（Two-tailed test）適用於不確定效果方向時，只關心是否「有差異」。單尾檢定適用於已知方向（如「只想檢測是否有增加」）。' }
+  ],
+  6: [
+    { q:'研究比較同一批病人接受護理介入「前」與「後」的血壓，應使用？', opts:['獨立樣本 t 檢定','配對樣本 t 檢定','卡方檢定（χ²）','單因子 ANOVA'], ans:1, exp:'同一批病人的前後測量是「配對設計」，應使用配對樣本 t 檢定。它比較每個人的前後差值，比較靈敏。' },
+    { q:'研究護理師「性別（男/女）」與「是否曾離職（是/否）」的關係，應使用？', opts:['獨立樣本 t 檢定','配對樣本 t 檢定','卡方檢定（χ²）','單因子 ANOVA'], ans:2, exp:'兩個變項都是類別資料（名目尺度），分析其關聯性應使用卡方檢定（χ²）。卡方檢定比較觀察次數與期望次數是否相符。' },
+    { q:'比較「外科病房」、「內科病房」、「急診病房」三個病房的病人滿意度平均分，應使用？', opts:['獨立樣本 t 檢定','配對樣本 t 檢定','卡方檢定（χ²）','單因子 ANOVA'], ans:3, exp:'比較 3 組以上的連續資料平均數差異，應使用單因子 ANOVA（變異數分析）。若只有 2 組，使用 t 檢定即可。' },
+    { q:'進行 t 檢定的基本假設之一是？', opts:['依變項必須是名目資料','樣本數必須 ≥ 100','資料符合常態分佈','不需要有對照組'], ans:2, exp:'t 檢定的基本假設包括：(1) 資料符合常態分佈；(2) 兩組獨立樣本時，變異數同質。小樣本尤其需注意常態性假設。' }
   ]
 };
 
@@ -768,88 +1175,190 @@ function renderQ(ch) {
   if (!state || !qs) return;
 
   if (state.idx >= qs.length) {
-    // show result
-    var allRight = state.score === qs.length;
+    var pct = Math.round(state.score / qs.length * 100);
+    var stars = getStars(pct);
+    setCh(ch, { score: state.score, total: qs.length, pct: pct });
+    var starStr = '★'.repeat(stars) + '☆'.repeat(3 - stars);
+    var msg = pct >= 80 ? '🎉 優秀！繼續保持！' : pct >= 60 ? '👍 不錯！再多複習一下吧。' : '📖 建議重新閱讀本章後再試一次。';
+    var suggestion = '';
+    if (pct < 80) {
+      var wrongOnes = state.wrongTopics || [];
+      suggestion = '<div class="quiz-suggestions"><b>💡 建議複習重點</b>本章中有些概念需要加強，建議重新閱讀本章內容，特別注意定義與應用情境的區別。</div>';
+    }
     container.innerHTML =
       '<div class="quiz-done">' +
-      '<div class="quiz-score">' + state.score + ' / ' + qs.length + '</div>' +
-      '<div style="font-size:.9rem;margin-top:8px;color:var(--gray)">' +
-        (allRight ? '🎉 全部答對！表現優秀！' : '繼續加油，多複習錯誤的題目！') +
-      '</div>' +
+      '<div class="quiz-score-big">' + state.score + ' / ' + qs.length + '</div>' +
+      '<div class="quiz-score-label">答對題數</div>' +
+      '<div class="quiz-stars">' + starStr + '</div>' +
+      '<div class="quiz-msg">' + msg + '（答對率：' + pct + '%）</div>' +
+      suggestion +
       '<button class="btn-retry" data-ch="' + ch + '">重新作答</button>' +
       '</div>';
-    // attach retry
     container.querySelector('.btn-retry').addEventListener('click', function() {
-      var c = parseInt(this.getAttribute('data-ch'), 10);
-      initQuiz(c);
+      initQuiz(parseInt(this.getAttribute('data-ch'), 10));
     });
+    if (pct >= 80) showToast('🌟 第' + ch + '章測驗完成！獲得 ' + stars + ' 顆星！');
+    else if (pct >= 60) showToast('✅ 第' + ch + '章測驗完成，繼續加油！');
+    updateSidebarProgress();
     return;
   }
 
   var q = qs[state.idx];
-  var letters = ['A', 'B', 'C', 'D'];
-
+  var letters = ['A','B','C','D'];
+  var totalQ = qs.length;
+  var progPct = Math.round(state.idx / totalQ * 100);
   var optsHtml = '';
   for (var i = 0; i < q.opts.length; i++) {
-    optsHtml +=
-      '<button class="opt-btn" data-idx="' + i + '">' +
-      '<span class="opt-letter">' + letters[i] + '</span>' +
-      q.opts[i] +
-      '</button>';
+    optsHtml += '<button class="opt-btn" data-idx="' + i + '"><span class="opt-letter">' + letters[i] + '</span>' + q.opts[i] + '</button>';
   }
-
   container.innerHTML =
-    '<div class="quiz-progress">題目 ' + (state.idx + 1) + ' / ' + qs.length + '</div>' +
+    '<div class="quiz-progress">題目 ' + (state.idx + 1) + ' / ' + totalQ +
+    '<div class="quiz-prog-bar"><div class="quiz-prog-fill" style="width:' + progPct + '%"></div></div></div>' +
     '<div class="quiz-q">' + q.q + '</div>' +
     '<div class="quiz-opts">' + optsHtml + '</div>' +
     '<div class="quiz-fb" id="qfb-' + ch + '"></div>' +
-    '<button class="btn-next-q" id="qnxt-' + ch + '">下一題 →</button>';
+    '<button class="btn-next-q" id="qnxt-' + ch + '">' + (state.idx + 1 < totalQ ? '下一題 →' : '查看結果') + '</button>';
 
-  // attach option click events
   var optBtns = container.querySelectorAll('.opt-btn');
   var answered = false;
-  for (var i = 0; i < optBtns.length; i++) {
-    (function(btn) {
-      btn.addEventListener('click', function() {
-        if (answered) return;
-        answered = true;
-        var chosen = parseInt(btn.getAttribute('data-idx'), 10);
-        var fb = document.getElementById('qfb-' + ch);
-        var nxt = document.getElementById('qnxt-' + ch);
-        // disable all buttons
-        for (var j = 0; j < optBtns.length; j++) {
-          optBtns[j].setAttribute('disabled', 'true');
-          optBtns[j].style.opacity = '0.8';
-        }
-        if (chosen === q.ans) {
-          btn.classList.add('correct');
-          fb.className = 'quiz-fb show ok';
-          fb.innerHTML = '✅ 正確！' + q.exp;
-          state.score++;
-        } else {
-          btn.classList.add('wrong');
-          optBtns[q.ans].classList.add('correct');
-          fb.className = 'quiz-fb show bad';
-          fb.innerHTML = '❌ 錯誤。' + q.exp;
-        }
-        nxt.className = 'btn-next-q show';
-      });
-    })(optBtns[i]);
-  }
-
-  // attach next button
-  var nxtBtn = document.getElementById('qnxt-' + ch);
-  nxtBtn.addEventListener('click', function() {
+  optBtns.forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      if (answered) return;
+      answered = true;
+      var chosen = parseInt(btn.getAttribute('data-idx'), 10);
+      var fb = document.getElementById('qfb-' + ch);
+      var nxt = document.getElementById('qnxt-' + ch);
+      optBtns.forEach(function(b) { b.setAttribute('disabled', 'true'); });
+      if (chosen === q.ans) {
+        btn.classList.add('correct');
+        fb.className = 'quiz-fb show ok';
+        fb.innerHTML = '✅ 正確！' + q.exp;
+        state.score++;
+      } else {
+        btn.classList.add('wrong');
+        optBtns[q.ans].classList.add('correct');
+        fb.className = 'quiz-fb show bad';
+        fb.innerHTML = '❌ 錯誤。' + q.exp;
+      }
+      nxt.className = 'btn-next-q show';
+    });
+  });
+  document.getElementById('qnxt-' + ch).addEventListener('click', function() {
     state.idx++;
     renderQ(ch);
   });
 }
 
 // ──────────────────────────────────────────────
-// 4. Boot
+// Bottom nav sync
 // ──────────────────────────────────────────────
-initQuiz(0);
-initQuiz(1);
+function syncBottomNav(n) {
+  for (var i = 0; i <= 6; i++) {
+    var el = document.getElementById('bn-' + i);
+    if (el) el.classList.toggle('active', i === n);
+  }
+  var home = document.getElementById('bn-0');
+  if (home) home.classList.toggle('active', n === 0);
+  var prevBtn = document.getElementById('bn-prev');
+  if (prevBtn) prevBtn.style.opacity = n <= 1 ? '0.35' : '1';
+  var nextBtn = document.getElementById('bn-next-m');
+  if (nextBtn) nextBtn.style.opacity = n >= 6 ? '0.35' : '1';
+}
+
+function goPrev() {
+  if (currentCh > 0) goSection(currentCh - 1);
+}
+
+// Patch goSection to sync bottom nav
+var _goSection = goSection;
+goSection = function(n) {
+  _goSection(n);
+  syncBottomNav(n);
+};
+
+// ──────────────────────────────────────────────
+// PWA: Service Worker
+// ──────────────────────────────────────────────
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('./sw.js').then(function(reg) {
+      reg.addEventListener('updatefound', function() {
+        var newWorker = reg.installing;
+        newWorker.addEventListener('statechange', function() {
+          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+            showToast('🔄 內容已更新，重新整理以套用最新版本');
+          }
+        });
+      });
+    }).catch(function(err) {
+      console.warn('SW registration failed:', err);
+    });
+  });
+}
+
+// ──────────────────────────────────────────────
+// PWA: Install prompt
+// ──────────────────────────────────────────────
+var deferredInstallPrompt = null;
+
+window.addEventListener('beforeinstallprompt', function(e) {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  document.getElementById('btn-install').style.display = 'inline-block';
+  // Show banner after 2s delay on mobile
+  setTimeout(function() {
+    if (window.innerWidth <= 680) {
+      document.getElementById('install-banner').classList.add('show');
+    }
+  }, 2000);
+});
+
+window.addEventListener('appinstalled', function() {
+  deferredInstallPrompt = null;
+  document.getElementById('btn-install').style.display = 'none';
+  document.getElementById('install-banner').classList.remove('show');
+  showToast('🎉 APP 已成功安裝到主畫面！');
+});
+
+function triggerInstall() {
+  if (!deferredInstallPrompt) {
+    showToast('請在瀏覽器選單中選擇「加入主畫面」');
+    return;
+  }
+  deferredInstallPrompt.prompt();
+  deferredInstallPrompt.userChoice.then(function(result) {
+    if (result.outcome === 'accepted') showToast('🎉 正在安裝 APP...');
+    deferredInstallPrompt = null;
+  });
+}
+
+document.getElementById('ib-install').addEventListener('click', triggerInstall);
+document.getElementById('ib-close').addEventListener('click', function() {
+  document.getElementById('install-banner').classList.remove('show');
+});
+
+// ──────────────────────────────────────────────
+// PWA: Offline indicator
+// ──────────────────────────────────────────────
+function updateOnlineStatus() {
+  var badge = document.getElementById('offline-badge');
+  if (badge) badge.classList.toggle('show', !navigator.onLine);
+  if (!navigator.onLine) showToast('📵 目前為離線模式，可繼續使用已快取的內容');
+}
+window.addEventListener('online', updateOnlineStatus);
+window.addEventListener('offline', updateOnlineStatus);
+
+// ──────────────────────────────────────────────
+// Boot
+// ──────────────────────────────────────────────
+(function boot() {
+  updateSidebarProgress();
+  renderDashboard();
+  initQuiz(1);
+  initQuiz(2);
+  syncBottomNav(0);
+  updateOnlineStatus();
+})();
 </script>
 </body>
 </html>
