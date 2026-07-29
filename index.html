@@ -217,12 +217,79 @@ tr:hover td{background:#e0f2fe}
   #topbar{padding:12px 16px 12px 58px}
   .g2,.g3,.g4{grid-template-columns:1fr}
 }
+
+/* ─── Biostat Chatbot ─── */
+.bot-fab{
+  position:fixed;bottom:22px;right:22px;width:56px;height:56px;border-radius:50%;
+  background:linear-gradient(135deg,var(--blue),var(--blue-dark));color:#fff;border:none;
+  box-shadow:0 4px 16px rgba(37,99,235,.45);font-size:1.5rem;cursor:pointer;z-index:400;
+  display:flex;align-items:center;justify-content:center;transition:transform .18s
+}
+.bot-fab:hover{transform:scale(1.08)}
+.bot-fab .bot-dot{
+  position:absolute;top:-1px;right:-1px;width:13px;height:13px;background:var(--green);
+  border-radius:50%;border:2px solid #fff
+}
+#bot-panel{
+  position:fixed;bottom:88px;right:22px;width:340px;max-width:calc(100vw - 28px);
+  height:480px;max-height:calc(100vh - 116px);background:#fff;border-radius:16px;
+  box-shadow:0 10px 36px rgba(0,0,0,.22);display:none;flex-direction:column;
+  overflow:hidden;z-index:400
+}
+#bot-panel.open{display:flex}
+#bot-head{
+  background:linear-gradient(135deg,var(--blue),var(--blue-dark));color:#fff;
+  padding:14px 16px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0
+}
+#bot-head-title{font-size:.88rem;font-weight:700}
+#bot-head-title small{display:block;font-weight:400;opacity:.8;font-size:.68rem;margin-top:2px}
+#bot-close{
+  background:rgba(255,255,255,.2);border:none;color:#fff;width:26px;height:26px;
+  border-radius:50%;cursor:pointer;font-size:.85rem;flex-shrink:0
+}
+#bot-close:hover{background:rgba(255,255,255,.32)}
+#bot-msgs{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;background:var(--gray-light)}
+.bot-bubble{max-width:84%;padding:9px 13px;border-radius:14px;font-size:.82rem;line-height:1.6;white-space:pre-line}
+.bot-bubble.bot{align-self:flex-start;background:#fff;border:1px solid var(--border);border-bottom-left-radius:4px}
+.bot-bubble.user{align-self:flex-end;background:var(--blue);color:#fff;border-bottom-right-radius:4px}
+#bot-suggest{display:flex;flex-wrap:wrap;gap:6px;padding:0 12px 10px;flex-shrink:0}
+.bot-chip{
+  border:1px solid var(--blue-mid);background:var(--blue-light);color:var(--blue-dark);
+  border-radius:14px;padding:5px 11px;font-size:.73rem;cursor:pointer
+}
+.bot-chip:hover{background:var(--blue-mid)}
+#bot-input-row{display:flex;gap:8px;padding:10px 12px;border-top:1px solid var(--border);background:#fff;flex-shrink:0}
+#bot-input{flex:1;min-width:0;border:1px solid var(--border);border-radius:20px;padding:8px 14px;font-size:.82rem;outline:none}
+#bot-input:focus{border-color:var(--blue)}
+#bot-send{background:var(--blue);color:#fff;border:none;width:36px;height:36px;border-radius:50%;cursor:pointer;font-size:.9rem;flex-shrink:0}
+#bot-send:hover{background:var(--blue-dark)}
+@media(max-width:420px){
+  #bot-panel{right:14px;left:14px;width:auto}
+  .bot-fab{right:16px;bottom:16px}
+}
 </style>
 </head>
 <body>
 
 <button id="ham" onclick="openSidebar()">&#9776;</button>
 <div id="overlay" onclick="closeSidebar()"></div>
+
+<!-- ═══ Biostat Chatbot ═══ -->
+<button class="bot-fab" id="bot-fab" onclick="toggleBot()" aria-label="開啟生物統計小幫手">
+  🤖<span class="bot-dot"></span>
+</button>
+<div id="bot-panel">
+  <div id="bot-head">
+    <div id="bot-head-title">🤖 統統小幫手<small>護理生物統計 Q&amp;A・自動回覆</small></div>
+    <button id="bot-close" onclick="toggleBot()">✕</button>
+  </div>
+  <div id="bot-msgs"></div>
+  <div id="bot-suggest"></div>
+  <div id="bot-input-row">
+    <input id="bot-input" type="text" placeholder="輸入你的統計問題…" autocomplete="off">
+    <button id="bot-send" onclick="sendBot()" aria-label="送出">➤</button>
+  </div>
+</div>
 
 <div id="app">
 
@@ -846,7 +913,198 @@ function renderQ(ch) {
 }
 
 // ──────────────────────────────────────────────
-// 4. Boot
+// 4. Biostat Chatbot（規則式關鍵字自動回覆）
+// ──────────────────────────────────────────────
+var botKB = [
+  {
+    kw: ['母體', '樣本', 'population', 'sample', '參數', '統計量', 'parameter', 'statistic'],
+    a: '📊 母體 vs 樣本\n\n母體（Population, N）：研究關注的「所有」個體，例如全台灣的糖尿病患者。\n樣本（Sample, n）：從母體中抽出的一部分，例如某醫院 200 位糖尿病患者。\n\n描述母體的數值叫「參數」（希臘字母 μ、σ），描述樣本的數值叫「統計量」（英文字母 x̄、s）。\n記憶法：母體用希臘字母，樣本用英文字母！'
+  },
+  {
+    kw: ['測量尺度', '尺度', '名目', '次序', '順序', '區間', '比例尺度', 'nominal', 'ordinal', 'interval', 'ratio'],
+    a: '📏 四種測量尺度（由低到高）\n\n1️⃣ 名目 Nominal：只能分類，無順序。例：性別、血型\n2️⃣ 次序 Ordinal：有順序，但間距不等。例：疼痛等級、教育程度\n3️⃣ 區間 Interval：等距，但無真正零點。例：攝氏體溫\n4️⃣ 比例 Ratio：等距，且有真正零點。例：體重、身高、心跳\n\n尺度層級越高，能用的統計方法越多！可以到第二章互動練習實際點選看看喔。'
+  },
+  {
+    kw: ['描述統計', '推論統計', 'descriptive', 'inferential'],
+    a: '📋 描述統計 vs 推論統計\n\n描述統計：整理、摘要、呈現「現有」資料，例如平均數、標準差、長條圖，不做推論。\n推論統計：用「樣本」結果去推估「母體」，例如假設檢定、信賴區間，需考慮抽樣誤差。'
+  },
+  {
+    kw: ['集中趨勢', '平均數', '平均值', '中位數', '眾數', 'mean', 'median', 'mode'],
+    a: '🎯 三種集中趨勢量數\n\n平均數 Mean：所有數值加總除以個數，適合等距／比例資料，易受極端值影響。\n中位數 Median：排序後最中間的值，適合次序資料或有極端值時使用。\n眾數 Mode：出現次數最多的值，是唯一適用於名目資料的集中量數。'
+  },
+  {
+    kw: ['變異', '標準差', '變異數', '全距', '四分位', 'sd', 'standard deviation', 'variance'],
+    a: '📐 常見離散（變異）量數\n\n全距 Range：最大值減最小值，計算簡單但受極端值影響大。\n變異數 Variance：各數值與平均數差的平方之平均。\n標準差 SD：變異數開根號，單位與原始資料相同，是最常用的離散指標。\n四分位距 IQR：Q3 − Q1，適合搭配中位數描述次序資料。'
+  },
+  {
+    kw: ['常態分布', '常態分配', 'normal distribution', '鐘形'],
+    a: '🔔 常態分布 Normal Distribution\n\n左右對稱的鐘形曲線，平均數＝中位數＝眾數，落在平均數 ±1、2、3 個標準差內的比例約為 68%、95%、99.7%（經驗法則）。許多生理指標（如身高、血壓）近似常態分布，也是許多母數統計方法（t 檢定、ANOVA）的前提假設。'
+  },
+  {
+    kw: ['抽樣', '隨機抽樣', '分層抽樣', '簡便抽樣', '立意抽樣', 'sampling'],
+    a: '🎲 常見抽樣方法\n\n隨機抽樣 Random：每個個體被抽中機率相同，代表性最好。\n分層抽樣 Stratified：先依特徵分層（如科別），再各層隨機抽樣。\n系統抽樣 Systematic：依固定間隔抽取，例如每第 10 位病人。\n方便／立意抽樣 Convenience／Purposive：非隨機，容易但代表性較弱，臨床研究中常見但需注意抽樣誤差。'
+  },
+  {
+    kw: ['假設檢定', 'h0', 'h1', '虛無假設', '對立假設', '型一誤差', '型二誤差', 'hypothesis'],
+    a: '🧪 假設檢定基本邏輯\n\n虛無假設 H0：通常假設「沒有差異／沒有關係」。\n對立假設 H1：研究者想證明的「有差異／有關係」。\n若 p < α（通常 0.05），拒絕 H0，結果具統計顯著性。\n型一誤差 α：H0 為真卻拒絕它（偽陽性）。\n型二誤差 β：H0 為假卻沒拒絕它（偽陰性）。'
+  },
+  {
+    kw: ['p值', 'p 值', 'p-value', '顯著', '顯著性', 'significance'],
+    a: '🔍 p 值是什麼？\n\np 值代表「若虛無假設為真，觀察到目前這麼極端（或更極端）結果的機率」。\np < 0.05：結果達統計顯著，通常拒絕虛無假設。\np ≥ 0.05：未達顯著，沒有足夠證據拒絕虛無假設（不代表「證明沒有差異」）。\n⚠️ p 值不代表效果大小，也不是「結果為真的機率」，判讀時仍需搭配效果量與臨床意義。'
+  },
+  {
+    kw: ['t檢定', 't 檢定', 't-test', '獨立樣本', '成對樣本', '配對t'],
+    a: '📈 t 檢定 t-test\n\n用於比較「平均數」是否有顯著差異，資料需為等距／比例尺度且近似常態分布。\n獨立樣本 t 檢定：比較兩個「不同」組別的平均數（如實驗組 vs 對照組）。\n成對樣本 t 檢定：比較「同一群人」介入前後的平均數（如衛教前 vs 衛教後）。\n護理例：比較兩種疼痛照護措施前後的疼痛評分平均差異。'
+  },
+  {
+    kw: ['卡方', 'chi-square', 'chi square', 'χ²', '獨立性檢定'],
+    a: '✖️ 卡方檢定 Chi-square Test\n\n用於檢定兩個「類別變項」是否有關聯（獨立性檢定），資料需為名目或次序尺度的次數資料。\n護理例：檢定「性別」與「是否規律服藥」是否有關聯。'
+  },
+  {
+    kw: ['anova', '變異數分析', '單因子'],
+    a: '📊 ANOVA 變異數分析\n\n用於比較「三組以上」平均數是否有顯著差異（不能直接用多次 t 檢定，會提高型一誤差）。\n若整體檢定顯著，需再做事後檢定（如 Tukey）找出哪幾組之間有差異。\n護理例：比較三種不同衛教方式對病人焦慮分數的影響。'
+  },
+  {
+    kw: ['相關', '迴歸', 'correlation', 'regression', 'pearson', 'spearman', 'r值'],
+    a: '📉 相關與迴歸\n\n相關 Correlation：描述兩個連續變項之間線性關係的方向與強弱，r 介於 -1 到 1。\n・Pearson 相關：用於等距／比例資料\n・Spearman 相關：用於次序資料或非常態資料\n迴歸 Regression：進一步用一個或多個變項去「預測」另一個變項的數值。\n護理例：分析睡眠時數與焦慮分數的相關性。'
+  },
+  {
+    kw: ['信賴區間', 'ci', 'confidence interval', '95%'],
+    a: '📏 信賴區間 Confidence Interval\n\n以樣本統計量估計母體參數時，給出一個「有把握程度」的範圍，例如 95% CI 表示：若重複抽樣 100 次，約有 95 次所得區間會包含真實的母體參數。區間越窄，估計越精確。'
+  },
+  {
+    kw: ['母數', '無母數', 'parametric', 'nonparametric', 'non-parametric', 'mann-whitney', 'wilcoxon'],
+    a: '⚖️ 母數 vs 無母數統計\n\n母數統計 Parametric：假設資料近似常態分布，資料需為等距／比例尺度，如 t 檢定、ANOVA，檢定力較強。\n無母數統計 Nonparametric：不需常態分布假設，適合次序資料或小樣本，如 Mann-Whitney U（對應獨立樣本 t 檢定）、Wilcoxon（對應成對樣本 t 檢定）、Spearman 相關。'
+  },
+  {
+    kw: ['敏感度', '特異度', 'sensitivity', 'specificity', '偽陽性', '偽陰性', '診斷準確度'],
+    a: '🩺 敏感度與特異度\n\n敏感度 Sensitivity：真正有病的人中，被檢測「驗出陽性」的比例，越高越不容易「漏診」（偽陰性少）。\n特異度 Specificity：真正沒病的人中，被檢測「驗出陰性」的比例，越高越不容易「誤診」（偽陽性少）。\n護理例：某篩檢工具敏感度 90%，表示 100 位真正患病者中約有 90 位會被驗出陽性。'
+  },
+  {
+    kw: ['roc', 'auc', '曲線下面積'],
+    a: '📈 ROC 曲線與 AUC\n\nROC 曲線以「1－特異度」為 X 軸、「敏感度」為 Y 軸，用來呈現不同切點下診斷工具的表現。\nAUC（曲線下面積）介於 0.5～1，越接近 1 代表診斷準確度越好；0.5 代表跟亂猜沒兩樣。'
+  },
+  {
+    kw: ['相對危險率', '勝算比', 'relative risk', 'odds ratio', 'rr值', 'or值', '危險比'],
+    a: '⚠️ 相對危險率 RR vs 勝算比 OR\n\n相對危險率 RR：暴露組發生率 ÷ 未暴露組發生率，常用於世代研究（Cohort Study）。\n勝算比 OR：暴露組勝算 ÷ 未暴露組勝算，常用於病例對照研究（Case-Control Study）。\nRR／OR ＝1：無關聯；>1：暴露會增加風險；<1：暴露具保護作用。'
+  },
+  {
+    kw: ['信度', '效度', 'reliability', 'validity', 'cronbach', 'alpha值', '量表'],
+    a: '📋 信度與效度\n\n信度 Reliability：測量結果的「一致性、穩定性」，常用 Cronbach\'s α 評估量表內部一致性（α ≥ 0.7 通常可接受）。\n效度 Validity：測量工具是否真的測到「想測量的概念」，常見有內容效度、效標效度、建構效度。\n護理例：焦慮量表若多次施測分數穩定，代表信度佳；若能有效區分焦慮與非焦慮病人，代表效度佳。'
+  },
+  {
+    kw: ['存活分析', 'kaplan', 'survival analysis', '存活曲線'],
+    a: '⏳ 存活分析 Survival Analysis\n\n用於分析「發生某事件所需的時間」，並能處理「設限資料」（Censoring，即追蹤期間事件尚未發生或個案失聯）。\nKaplan-Meier 存活曲線：呈現隨時間變化的存活機率，常用於比較兩組（如不同治療方式）的存活情形，並可用 Log-rank test 檢定組間差異。'
+  },
+  {
+    kw: ['樣本數', '檢定力', 'sample size', 'power analysis', '檢力'],
+    a: '🔢 樣本數估算與檢定力\n\n檢定力 Power（1－β）：當真的有差異時，能正確偵測出來的機率，通常要求 ≥ 0.8。\n樣本數會受「效果量」「顯著水準 α」「檢定力」「資料變異程度」影響：效果量越小、要求檢定力越高，需要的樣本數就越大。研究設計階段應先估算所需樣本數，避免樣本太少導致偽陰性結果。'
+  },
+  {
+    kw: ['偏態', '離群值', '盒鬚圖', 'skewness', 'outlier', 'boxplot', '偏斜'],
+    a: '📦 偏態、離群值與盒鬚圖\n\n偏態 Skewness：資料分布不對稱的程度。右偏（正偏）時平均數＞中位數；左偏（負偏）時平均數＜中位數。\n離群值 Outlier：明顯偏離其他資料的極端值，會嚴重影響平均數與標準差，此時建議改用中位數與 IQR 描述資料。\n盒鬚圖 Box Plot：以五數摘要（最小值、Q1、中位數、Q3、最大值）呈現資料分布與離群值，是檢查偏態與極端值的常用圖表。'
+  },
+  {
+    kw: ['效果量', 'effect size', "cohen's d", 'cohen d'],
+    a: '📏 效果量 Effect Size\n\n效果量用來量化「差異或關聯的大小」，不受樣本數影響，可補足 p 值只能說「顯不顯著」的限制。\n常見指標：Cohen\'s d（用於平均數差異，0.2 小、0.5 中、0.8 大）、Pearson r（相關強弱）。統計顯著（p<0.05）不等於效果量大，臨床上應同時報告兩者。'
+  },
+  {
+    kw: ['邏輯迴歸', 'logistic regression', '羅吉斯迴歸'],
+    a: '🔗 邏輯迴歸 Logistic Regression\n\n當「依變項」是二分類別（如：有無跌倒、存活與否）時使用，可估計自變項（如年齡、共病數）對結果發生「勝算」的影響，結果常以勝算比 OR 呈現。與線性迴歸不同，線性迴歸適用於連續型依變項。'
+  },
+  {
+    kw: ['隨機分派', '盲法', '雙盲', '單盲', 'randomization', 'blinding', 'rct', '隨機對照試驗'],
+    a: '🎯 隨機分派與盲法（RCT 常考觀念）\n\n隨機分派 Randomization：以隨機方式將受試者分至實驗組／對照組，可平衡已知與未知的干擾因子，是隨機對照試驗（RCT）的核心。\n盲法 Blinding：單盲（受試者不知分組）、雙盲（受試者與研究者皆不知分組），目的是減少期望效應與觀察者偏差，提升研究內在效度。'
+  },
+  {
+    kw: ['實證', '證據等級', 'evidence-based', 'ebp', '統合分析', 'meta-analysis', '系統性回顧'],
+    a: '🏆 實證等級與統合分析\n\n實證等級（由高到低）：系統性回顧／統合分析 > RCT > 世代研究 > 病例對照研究 > 個案報告／專家意見。\n系統性回顧 Systematic Review：有系統地蒐集並評讀某主題的所有相關研究。\n統合分析 Meta-analysis：將多篇研究的結果量化合併，得到更精確的整體效果估計，是實證護理（EBP）中最高等級的證據來源之一。'
+  },
+  {
+    kw: ['你是誰', '你會什麼', '功能', '可以問什麼', 'help', '幫助'],
+    a: '🤖 我是「統統小幫手」，可以用關鍵字自動回覆護理生物統計常見問題，例如：母體樣本、測量尺度、集中趨勢、標準差、常態分布、抽樣方法、假設檢定、p 值、t 檢定、卡方檢定、ANOVA、相關迴歸、信賴區間、母數與無母數統計、敏感度特異度、ROC/AUC、相對危險率／勝算比、信度效度、存活分析、樣本數與檢定力、偏態與離群值、效果量、邏輯迴歸、隨機分派與盲法、實證等級與統合分析。直接打字問我，或點下面的主題快速開始 👇'
+  }
+];
+
+var botTopics = ['母體與樣本', '測量尺度', '集中趨勢', '標準差', '假設檢定', 'p 值是什麼', 't 檢定', '卡方檢定', 'ANOVA', '信賴區間', '敏感度與特異度', '相對危險率與勝算比', '信度與效度', '存活分析', '樣本數估算', '效果量', '邏輯迴歸', '隨機分派與盲法', '實證等級'];
+var botInited = false;
+
+function matchBot(text) {
+  var norm = text.toLowerCase();
+  var best = null, bestScore = 0;
+  for (var i = 0; i < botKB.length; i++) {
+    var rule = botKB[i], score = 0;
+    for (var j = 0; j < rule.kw.length; j++) {
+      var kw = rule.kw[j].toLowerCase();
+      if (norm.indexOf(kw) !== -1) score += kw.length;
+    }
+    if (score > bestScore) { bestScore = score; best = rule; }
+  }
+  return best ? best.a : null;
+}
+
+function addBotBubble(text, who) {
+  var msgs = document.getElementById('bot-msgs');
+  var div = document.createElement('div');
+  div.className = 'bot-bubble ' + who;
+  div.textContent = text;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function renderBotSuggest() {
+  var wrap = document.getElementById('bot-suggest');
+  wrap.innerHTML = '';
+  for (var i = 0; i < botTopics.length; i++) {
+    (function(topic) {
+      var b = document.createElement('button');
+      b.className = 'bot-chip';
+      b.type = 'button';
+      b.textContent = topic;
+      b.addEventListener('click', function() {
+        document.getElementById('bot-input').value = topic;
+        sendBot();
+      });
+      wrap.appendChild(b);
+    })(botTopics[i]);
+  }
+}
+
+function sendBot() {
+  var inp = document.getElementById('bot-input');
+  var text = inp.value.trim();
+  if (!text) return;
+  addBotBubble(text, 'user');
+  inp.value = '';
+  setTimeout(function() {
+    var ans = matchBot(text);
+    if (!ans) {
+      ans = '🤔 我目前還沒有這題的答案，可以換個關鍵字問問看，或參考以下主題：\n\n' + botTopics.join('、');
+    }
+    addBotBubble(ans, 'bot');
+  }, 300);
+}
+
+function toggleBot() {
+  var panel = document.getElementById('bot-panel');
+  panel.classList.toggle('open');
+  if (panel.classList.contains('open') && !botInited) {
+    botInited = true;
+    addBotBubble('哈囉！我是「統統小幫手」🤖，可以自動回覆護理生物統計相關問題，例如母體樣本、測量尺度、t 檢定、卡方檢定、p 值等等。直接輸入問題，或點下面的主題快速開始 👇', 'bot');
+    renderBotSuggest();
+    document.getElementById('bot-input').focus();
+  }
+}
+
+(function() {
+  var input = document.getElementById('bot-input');
+  input.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') sendBot();
+  });
+})();
+
+// ──────────────────────────────────────────────
+// 5. Boot
 // ──────────────────────────────────────────────
 initQuiz(0);
 initQuiz(1);
